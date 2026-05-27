@@ -1,6 +1,7 @@
 let calendarEvents = [];
 let displayedYear = new Date().getFullYear();
 let displayedMonth = new Date().getMonth();
+const MAX_UPLOAD_BYTES = Math.floor(4.5 * 1024 * 1024);
 
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
@@ -176,14 +177,15 @@ async function handleAdminAnnouncement(e) {
             fileStatus.textContent = 'Uploading attachment…';
             fileStatus.className = 'status-message success';
             const file = fileInput.files[0];
+            if (file.size > MAX_UPLOAD_BYTES) throw new Error('Attachment exceeds 4.5MB limit.');
             const base64 = await fileToBase64(file);
             const uploadRes = await adminApiCall('uploadAttachment', 'POST', {
                 fileName: file.name,
                 mimeType: file.type || 'application/octet-stream',
                 base64: base64.split(',')[1]
             });
-            if (!uploadRes.ok) throw new Error('Attachment upload failed');
-            const uploadData = await uploadRes.json();
+            const uploadData = await uploadRes.json().catch(() => ({}));
+            if (!uploadRes.ok) throw new Error(uploadData.error || 'Attachment upload failed');
             attachmentUrl = uploadData.url;
             fileStatus.textContent = 'Attachment uploaded.';
         }
@@ -248,14 +250,14 @@ function openAnnouncementEdit(item) {
                 <div class="event-picker">${eventPickerHtml}</div>
             </div>
             <div class="form-group">
-                <label>Replace Attachment (optional)</label>
+                <label>Replace Attachment (optional, &lt;4.5MB)</label>
                 <input type="file" id="edit-ann-file" accept=".pdf,.png,.jpg,.jpeg,.docx,.pptx">
                 ${currentAttachment}
                 <div id="edit-ann-file-status" class="status-message"></div>
             </div>
             <div style="display:flex;gap:12px;margin-top:8px;">
                 <button type="submit" class="primary-btn" style="flex:1;">Save Changes</button>
-                <button type="button" class="primary-btn" style="flex:0 0 auto;background:rgba(239,68,68,0.2);color:#f87171;border:1px solid #f87171;" onclick="deleteAnnouncementById('${item.ID}')">Delete</button>
+                <button type="button" class="primary-btn" style="flex:1;background:rgba(239,68,68,0.2);color:#f87171;border:1px solid #f87171;" onclick="deleteAnnouncementById('${item.ID}')">Delete</button>
             </div>
             <div id="edit-ann-status" class="status-message"></div>
         </form>
@@ -273,14 +275,16 @@ function openAnnouncementEdit(item) {
                 fileSt.textContent = 'Uploading…';
                 fileSt.className = 'status-message success';
                 const file = fileInput.files[0];
+                if (file.size > MAX_UPLOAD_BYTES) throw new Error('Attachment exceeds 4.5MB limit.');
                 const base64 = await fileToBase64(file);
                 const uploadRes = await adminApiCall('uploadAttachment', 'POST', {
                     fileName: file.name,
                     mimeType: file.type || 'application/octet-stream',
                     base64: base64.split(',')[1]
                 });
-                if (!uploadRes.ok) throw new Error('Attachment upload failed');
-                attachmentUrl = (await uploadRes.json()).url;
+                const uploadData = await uploadRes.json().catch(() => ({}));
+                if (!uploadRes.ok) throw new Error(uploadData.error || 'Attachment upload failed');
+                attachmentUrl = uploadData.url;
             }
             const checked = document.querySelectorAll('#edit-modal-body input[name="edit-event-ids"]:checked');
             const res = await adminApiCall('editAnnouncement', 'POST', {
@@ -456,7 +460,7 @@ function openCalendarEventEdit(event) {
             </div>
             <div style="display:flex;gap:12px;margin-top:8px;">
                 <button type="submit" class="primary-btn" style="flex:1;">Save Changes</button>
-                <button type="button" class="primary-btn" style="flex:0 0 auto;background:rgba(239,68,68,0.2);color:#f87171;border:1px solid #f87171;" onclick="deleteCalendarEventById('${event.ID}')">Delete</button>
+                <button type="button" class="primary-btn" style="flex:1;background:rgba(239,68,68,0.2);color:#f87171;border:1px solid #f87171;" onclick="deleteCalendarEventById('${event.ID}')">Delete</button>
             </div>
             <div id="edit-cal-status" class="status-message"></div>
         </form>
@@ -491,9 +495,17 @@ async function deleteCalendarEventById(id) {
     closeModal('edit-modal');
     try {
         const res = await adminApiCall('deleteCalendarEvent', 'POST', { id });
-        if (!res.ok) throw new Error('Failed');
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            if (res.status === 409 && Array.isArray(data.linkedAnnouncements)) {
+                const titles = data.linkedAnnouncements.map(item => `- ${item.title || item.id}`).join('\n');
+                alert(`This event is still linked to announcement posts. Edit those posts and remove the event before deleting it:\n\n${titles}`);
+                return;
+            }
+            throw new Error(data.error || 'Failed');
+        }
         fetchCalendarEvents();
-    } catch { alert('Failed to delete event.'); }
+    } catch (err) { alert(err.message || 'Failed to delete event.'); }
 }
 
 // --- Suggestions ---
@@ -716,7 +728,7 @@ async function fetchHousePoints() {
                         ${HOUSES.map(h => `
                             <div class="form-group" style="margin-bottom:0;">
                                 <label style="color:var(--house-${h.toLowerCase()})">${h}</label>
-                                <input type="number" id="admin-house-${h.toLowerCase()}" placeholder="±0">
+                                <input type="number" id="admin-house-${h.toLowerCase()}" placeholder="0" autocomplete="off" step="1">
                             </div>`).join('')}
                     </div>
                     <div style="margin-top:1rem;">
@@ -755,9 +767,14 @@ async function handleAdminHousePoints(e) {
     const status = document.getElementById('admin-house-status');
     const reason = document.getElementById('admin-house-reason').value.trim();
 
-    const entries = HOUSES
-        .map(h => ({ house: h, points: parseInt(document.getElementById(`admin-house-${h.toLowerCase()}`)?.value || '') }))
-        .filter(en => !isNaN(en.points) && en.points !== 0);
+    const entries = [];
+    for (const h of HOUSES) {
+        const raw = (document.getElementById(`admin-house-${h.toLowerCase()}`)?.value ?? '').trim();
+        if (raw === '') continue;
+        const points = parseInt(raw, 10);
+        if (!Number.isFinite(points) || points === 0) continue;
+        entries.push({ house: h, points });
+    }
 
     if (entries.length === 0) {
         status.textContent = 'Enter a point change for at least one house.';
@@ -781,8 +798,8 @@ async function handleFileUpload(e) {
     const statusDiv = document.getElementById('upload-status');
     const file = document.getElementById('upload-file').files[0];
     if (!file) return;
-    if (file.size > 20 * 1024 * 1024) {
-        statusDiv.textContent = 'File exceeds 20MB limit.';
+    if (file.size > MAX_UPLOAD_BYTES) {
+        statusDiv.textContent = 'File exceeds 4.5MB limit.';
         statusDiv.className = 'status-message error';
         return;
     }
@@ -803,12 +820,15 @@ async function handleFileUpload(e) {
                 type: document.getElementById('upload-type').value
             })
         });
-        if (!res.ok) throw new Error('Upload failed');
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || `Server error ${res.status}`);
+        }
         statusDiv.textContent = 'Document uploaded successfully for review!';
         statusDiv.className = 'status-message success';
         e.target.reset();
-    } catch {
-        statusDiv.textContent = 'Error uploading file. Ensure backend is configured.';
+    } catch (err) {
+        statusDiv.textContent = `Upload failed: ${err.message}`;
         statusDiv.className = 'status-message error';
     } finally {
         btn.disabled = false;
@@ -867,6 +887,7 @@ function initAdminAuth() {
 
 function showAdminUI() {
     document.body.classList.add('is-admin');
+    fetchAnnouncements();
     fetchSuggestions();
     fetchHousePoints();
     fetchCalendarEvents();
@@ -889,27 +910,75 @@ async function fetchAdminSubmissions() {
     const list = document.getElementById('admin-submissions-list');
     if (!list) return;
     try {
-        list.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
+        list.innerHTML = '<tr><td colspan="7" style="text-align:center;">Loading...</td></tr>';
         const res = await adminApiCall('getSubmissions', 'GET');
         const data = await res.json();
         if (data.length === 0) {
-            list.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-secondary);">No submissions yet.</td></tr>';
+            list.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary);">No submissions yet.</td></tr>';
             return;
         }
         list.innerHTML = '';
         data.forEach(sub => {
+            const suffixInputId = `suffix-${sub.FileID}`;
+            const statusId = `approve-status-${sub.FileID}`;
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${new Date(sub.Date).toLocaleDateString()}</td>
-                <td>Grade ${sub.Grade}</td>
-                <td>${sub.Subject}</td>
-                <td>${sub.Type}</td>
+                <td>Grade ${escHtml(sub.Grade)}</td>
+                <td>${escHtml(sub.Subject)}</td>
+                <td>${escHtml(sub.Type)}</td>
+                <td><input type="text" id="${suffixInputId}" class="table-input" value="${escHtml(sub.Suffix || '')}" aria-label="Paper suffix"></td>
                 <td><a href="https://drive.google.com/file/d/${sub.FileID}/view" target="_blank" class="attachment-link">View File</a></td>
+                <td>
+                    <button class="secondary-btn table-action-btn" onclick="approveSubmission('${sub.FileID}', this)">Approve PDF</button>
+                    <div id="${statusId}" class="table-status"></div>
+                </td>
             `;
             list.appendChild(tr);
         });
     } catch {
-        list.innerHTML = '<tr><td colspan="5" style="color:#f87171;text-align:center;">Error loading submissions.</td></tr>';
+        list.innerHTML = '<tr><td colspan="7" style="color:#f87171;text-align:center;">Error loading submissions.</td></tr>';
+    }
+}
+
+async function approveSubmission(fileId, btn) {
+    const input = document.getElementById(`suffix-${fileId}`);
+    const status = document.getElementById(`approve-status-${fileId}`);
+    const suffix = input?.value.trim();
+    if (!suffix) {
+        if (status) {
+            status.textContent = 'Enter a suffix.';
+            status.className = 'table-status error';
+        }
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Approving...';
+    }
+    if (status) {
+        status.textContent = '';
+        status.className = 'table-status';
+    }
+
+    try {
+        const res = await adminApiCall('approveSubmission', 'POST', { fileId, suffix });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
+        fetchAdminSubmissions();
+    } catch (err) {
+        if (status) {
+            status.textContent = err.message || 'Approval failed.';
+            status.className = 'table-status error';
+        } else {
+            alert(err.message || 'Approval failed.');
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Approve PDF';
+        }
     }
 }
 

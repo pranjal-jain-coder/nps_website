@@ -13,7 +13,7 @@ exports.handler = async (event, context) => {
 
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Submissions!A2:F', 
+            range: 'Submissions!A2:G',
         });
 
         const rows = response.data.values || [];
@@ -24,7 +24,8 @@ exports.handler = async (event, context) => {
             Subject: row[2] || '',
             Year: row[3] || '',
             Grade: row[4] || '',
-            Type: row[5] || ''
+            Type: row[5] || '',
+            Suffix: row[6] || ''
         }));
 
         submissions.sort((a, b) => new Date(b.Date) - new Date(a.Date)); // Newest first

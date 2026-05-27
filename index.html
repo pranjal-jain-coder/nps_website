@@ -89,7 +89,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="upload-file">Select PDF File (&lt;20MB)</label>
+                            <label for="upload-file">Select PDF File (&lt;4.5MB)</label>
                             <input type="file" id="upload-file" accept="application/pdf" required>
                         </div>
                         <button type="submit" class="primary-btn">Upload Document</button>
@@ -107,11 +107,11 @@
                         <table class="admin-table">
                             <thead>
                                 <tr>
-                                    <th>Date</th><th>Grade</th><th>Subject</th><th>Type</th><th>File</th>
+                                    <th>Date</th><th>Grade</th><th>Subject</th><th>Type</th><th>Suffix</th><th>File</th><th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="admin-submissions-list">
-                                <tr><td colspan="5" style="text-align:center; color: var(--text-secondary);">Loading...</td></tr>
+                                <tr><td colspan="7" style="text-align:center; color: var(--text-secondary);">Loading...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -126,70 +126,67 @@
                 </header>
 
                 <!-- Admin post controls -->
-                <div class="admin-panel glass-panel" style="margin-bottom: 2rem;">
-                    <h2 style="margin-bottom: 1.5rem;">Admin Controls</h2>
-                    <div class="ann-admin-grid">
-                        <div>
-                            <h3 class="admin-subheading">Add Calendar Event</h3>
-                            <form id="admin-calendar-form">
-                                <div class="form-group">
-                                    <label for="admin-cal-date">Date</label>
-                                    <input type="date" id="admin-cal-date" required>
+                <div class="admin-panel ann-admin-grid" style="margin-bottom: 2rem;">
+                    <div class="glass-panel">
+                        <h2 style="margin-bottom: 1.5rem;">Add Calendar Event</h2>
+                        <form id="admin-calendar-form">
+                            <div class="form-group">
+                                <label for="admin-cal-date">Date</label>
+                                <input type="date" id="admin-cal-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="admin-cal-name">Event Name</label>
+                                <input type="text" id="admin-cal-name" required placeholder="e.g. PT 1 Exams">
+                            </div>
+                            <div class="form-group">
+                                <label for="admin-cal-type">Type</label>
+                                <select id="admin-cal-type">
+                                    <option value="Academic">Academic</option>
+                                    <option value="Cultural">Cultural</option>
+                                    <option value="Sports">Sports</option>
+                                    <option value="Holiday">Holiday</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="primary-btn">Add Event</button>
+                            <div id="admin-cal-status" class="status-message"></div>
+                        </form>
+                    </div>
+                    <div class="glass-panel">
+                        <h2 style="margin-bottom: 1.5rem;">Post Announcement</h2>
+                        <form id="admin-announcement-form">
+                            <div class="form-group">
+                                <label for="admin-ann-title">Title</label>
+                                <input type="text" id="admin-ann-title" required placeholder="Announcement title">
+                            </div>
+                            <div class="form-group">
+                                <label for="admin-ann-content">Content</label>
+                                <textarea id="admin-ann-content" required rows="3" placeholder="Announcement content"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="admin-ann-type">Type</label>
+                                <select id="admin-ann-type">
+                                    <option value="General">General</option>
+                                    <option value="Academic">Academic</option>
+                                    <option value="Inter-School">Inter-School</option>
+                                    <option value="MUN">MUN</option>
+                                    <option value="Inter-House">Inter-House</option>
+                                    <option value="Sports">Sports</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Link Calendar Events</label>
+                                <div id="admin-event-picker" class="event-picker">
+                                    <p style="color: var(--text-secondary); font-size: 14px;">Loading events…</p>
                                 </div>
-                                <div class="form-group">
-                                    <label for="admin-cal-name">Event Name</label>
-                                    <input type="text" id="admin-cal-name" required placeholder="e.g. PT 1 Exams">
-                                </div>
-                                <div class="form-group">
-                                    <label for="admin-cal-type">Type</label>
-                                    <select id="admin-cal-type">
-                                        <option value="Academic">Academic</option>
-                                        <option value="Cultural">Cultural</option>
-                                        <option value="Sports">Sports</option>
-                                        <option value="Holiday">Holiday</option>
-                                    </select>
-                                </div>
-                                <button type="submit" class="primary-btn">Add Event</button>
-                                <div id="admin-cal-status" class="status-message"></div>
-                            </form>
-                        </div>
-                        <div>
-                            <h3 class="admin-subheading">Post Announcement</h3>
-                            <form id="admin-announcement-form">
-                                <div class="form-group">
-                                    <label for="admin-ann-title">Title</label>
-                                    <input type="text" id="admin-ann-title" required placeholder="Announcement title">
-                                </div>
-                                <div class="form-group">
-                                    <label for="admin-ann-content">Content</label>
-                                    <textarea id="admin-ann-content" required rows="3" placeholder="Announcement content"></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label for="admin-ann-type">Type</label>
-                                    <select id="admin-ann-type">
-                                        <option value="General">General</option>
-                                        <option value="Academic">Academic</option>
-                                        <option value="Inter-School">Inter-School</option>
-                                        <option value="MUN">MUN</option>
-                                        <option value="Inter-House">Inter-House</option>
-                                        <option value="Sports">Sports</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Link Calendar Events</label>
-                                    <div id="admin-event-picker" class="event-picker">
-                                        <p style="color: var(--text-secondary); font-size: 14px;">Loading events…</p>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="admin-ann-file">Attachment (optional — PDF, image, etc.)</label>
-                                    <input type="file" id="admin-ann-file" accept=".pdf,.png,.jpg,.jpeg,.docx,.pptx">
-                                    <div id="admin-ann-file-status" class="status-message"></div>
-                                </div>
-                                <button type="submit" class="primary-btn">Post Announcement</button>
-                                <div id="admin-ann-status" class="status-message"></div>
-                            </form>
-                        </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="admin-ann-file">Attachment (optional, &lt;4.5MB — PDF, image, etc.)</label>
+                                <input type="file" id="admin-ann-file" accept=".pdf,.png,.jpg,.jpeg,.docx,.pptx">
+                                <div id="admin-ann-file-status" class="status-message"></div>
+                            </div>
+                            <button type="submit" class="primary-btn">Post Announcement</button>
+                            <div id="admin-ann-status" class="status-message"></div>
+                        </form>
                     </div>
                 </div>
 

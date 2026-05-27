@@ -202,7 +202,7 @@
                 <li><strong>Navigating months</strong> — use the ← → arrows on either side of the calendar title to move between months.</li>
                 <li><strong>Editing / deleting</strong> — in Admin Mode, click any event chip inside the calendar grid. An edit modal opens with pre-filled fields and a Delete button.</li>
             </ul>
-            <div class="callout callout-warn">⚠ Deleting a calendar event does NOT remove it from announcement links automatically. Re-edit those announcements to uncheck the deleted event.</div>
+            <div class="callout callout-warn">⚠ Calendar events cannot be deleted while they are linked to announcements. Re-edit those announcements to uncheck the event first.</div>
         </div>
 
         <!-- Suggestions -->
@@ -234,13 +234,13 @@
             <h3><span class="icon icon-green">📄</span> Past Papers / Submissions</h3>
             <p><strong>Students</strong> upload files via the Submission Drop-Box on the Past Papers tab.</p>
             <p style="margin-top:8px;"><strong>Files are named automatically:</strong></p>
-            <pre>{year}_Grade{grade}_{subject}_{examType}_{originalFilename}
+            <pre>{year}_Grade{grade}_{subject}_{examType}_{suffix}
 Example: 2024-2025_Grade11_Physics_Half-Yearly_scan1.pdf</pre>
-            <p style="margin-top:12px;">Files land in the <strong>PENDING_DRIVE_FOLDER_ID</strong> folder in Google Drive (set in Netlify env vars).</p>
+            <p style="margin-top:12px;">Files first land in the <strong>PENDING_DRIVE_FOLDER_ID</strong> folder in Google Drive (set in Netlify env vars).</p>
             <ul style="margin-top:12px;">
                 <li><strong>Reviewing</strong> — in Admin Mode, a "Submitted Documents" table appears at the bottom of the Past Papers tab. Click "View File" to open the PDF in Drive.</li>
-                <li><strong>Approving</strong> — manually move the file from the Pending folder to the appropriate grade's public folder in Drive. There is no in-app approve button — the review table is read-only.</li>
-                <li><strong>Naming tip</strong> — ask students to name their files descriptively before uploading. The system prepends the metadata but keeps the original filename.</li>
+                <li><strong>Approving</strong> — edit the suffix in the table if needed, then click "Approve PDF". The site renames the file and moves it to the appropriate grade folder automatically.</li>
+                <li><strong>Naming tip</strong> — while pending, the suffix defaults to the student's original file name. Reviewers should replace it with a clean suffix before approval.</li>
             </ul>
         </div>
     </div>
@@ -379,6 +379,7 @@ Example: 2024-2025_Grade11_Physics_Half-Yearly_scan1.pdf</pre>
                 <tr><td>D</td><td>Year</td><td>e.g. 2024-2025</td></tr>
                 <tr><td>E</td><td>Grade</td><td>9 / 10 / 11 / 12</td></tr>
                 <tr><td>F</td><td>Type</td><td>exam type (PT 1, Half-Yearly, etc.)</td></tr>
+                <tr><td>G</td><td>Suffix</td><td>pending review suffix, editable before approval</td></tr>
             </table>
 
             <div class="callout callout-warn" style="margin-top:16px;">⚠ Row 1 of each tab is the header row — never delete it. Data starts at row 2.</div>

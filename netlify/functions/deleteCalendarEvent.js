@@ -12,6 +12,28 @@ exports.handler = async (event, context) => {
         const sheets = google.sheets({ version: 'v4', auth });
         const spreadsheetId = process.env.MASTER_SPREADSHEET_ID;
 
+        const linkedAnnouncementsResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Announcements Board!C2:G',
+        });
+        const linkedAnnouncements = (linkedAnnouncementsResponse.data.values || [])
+            .map(row => ({
+                title: row[0] || 'Untitled announcement',
+                eventIds: row[3] ? row[3].split(',').map(value => value.trim()).filter(Boolean) : [],
+                id: row[4] || ''
+            }))
+            .filter(announcement => announcement.eventIds.includes(id));
+
+        if (linkedAnnouncements.length > 0) {
+            return {
+                statusCode: 409,
+                body: JSON.stringify({
+                    error: 'This calendar event is still linked to announcements.',
+                    linkedAnnouncements: linkedAnnouncements.map(({ title, id }) => ({ title, id }))
+                })
+            };
+        }
+
         const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId });
         const sheet = spreadsheet.data.sheets.find(s => s.properties.title === 'Calendar Deadlines');
         if (!sheet) return { statusCode: 404, body: JSON.stringify({ error: 'Sheet not found' }) };

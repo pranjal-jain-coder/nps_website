@@ -1,6 +1,13 @@
 const { google } = require('googleapis');
 const { getAuthClient } = require('./googleClient');
-const { Readable } = require('stream');
+const {
+    MAX_UPLOAD_BYTES,
+    normalizeDriveFolderId,
+    sanitizeFilePart,
+    buildPaperFileName,
+    bufferToStream,
+    googleErrorMessage
+} = require('./driveUtils');
 
 exports.handler = async (event, context) => {
     if (event.httpMethod !== 'POST') {
@@ -8,58 +15,53 @@ exports.handler = async (event, context) => {
     }
 
     try {
+        const folderId = normalizeDriveFolderId(process.env.PENDING_DRIVE_FOLDER_ID);
+        const spreadsheetId = process.env.MASTER_SPREADSHEET_ID;
+
+        if (!folderId) return { statusCode: 500, body: JSON.stringify({ error: 'PENDING_DRIVE_FOLDER_ID env var is not set.' }) };
+        if (!spreadsheetId) return { statusCode: 500, body: JSON.stringify({ error: 'MASTER_SPREADSHEET_ID env var is not set.' }) };
+
         const { fileName, mimeType, base64, subject, year, grade, type } = JSON.parse(event.body);
 
         if (!base64 || mimeType !== 'application/pdf') {
             return { statusCode: 400, body: JSON.stringify({ error: 'Invalid file type. Must be PDF.' }) };
         }
 
-        // Validate size (20MB limit)
         const buffer = Buffer.from(base64, 'base64');
-        if (buffer.length > 20 * 1024 * 1024) {
-            return { statusCode: 413, body: JSON.stringify({ error: 'File size exceeds 20MB limit.' }) };
+        if (buffer.length > MAX_UPLOAD_BYTES) {
+            return { statusCode: 413, body: JSON.stringify({ error: 'File size exceeds 4.5MB limit.' }) };
         }
 
         const auth = getAuthClient();
         const drive = google.drive({ version: 'v3', auth });
         const sheets = google.sheets({ version: 'v4', auth });
-        const folderId = process.env.PENDING_DRIVE_FOLDER_ID;
-        const spreadsheetId = process.env.MASTER_SPREADSHEET_ID;
 
-        // Convert buffer to stream for upload
-        const stream = new Readable();
-        stream.push(buffer);
-        stream.push(null);
+        const suffix = sanitizeFilePart(fileName, 'Paper');
+        const driveFileName = buildPaperFileName({ year, grade, subject, type, suffix });
 
-        // Upload to Drive
         const driveResponse = await drive.files.create({
             requestBody: {
-                name: `${year}_Grade${grade}_${subject}_${type}_${fileName}`,
+                name: driveFileName,
                 parents: [folderId]
             },
             media: {
                 mimeType,
-                body: stream
+                body: bufferToStream(buffer)
             },
-            fields: 'id'
+            fields: 'id',
+            supportsAllDrives: true
         });
 
         const fileId = driveResponse.data.id;
 
-        // Log to spreadsheet (assuming a 'Submissions' tab exists)
-        try {
-            await sheets.spreadsheets.values.append({
-                spreadsheetId,
-                range: 'Submissions!A:F', // ID, Timestamp, Subject, Year, Grade, Type
-                valueInputOption: 'USER_ENTERED',
-                requestBody: {
-                    values: [[fileId, new Date().toISOString(), subject, year, grade, type]]
-                }
-            });
-        } catch (sheetError) {
-            console.error('Warning: Failed to log submission to sheets, but file uploaded:', sheetError);
-            // Non-fatal error if sheet doesn't exist
-        }
+        await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'Submissions!A:G',
+            valueInputOption: 'USER_ENTERED',
+            requestBody: {
+                values: [[fileId, new Date().toISOString(), subject, year, grade, type, suffix]]
+            }
+        });
 
         return {
             statusCode: 200,
@@ -69,7 +71,7 @@ exports.handler = async (event, context) => {
         console.error('Error uploading resource:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'Failed to upload resource' })
+            body: JSON.stringify({ error: googleErrorMessage(error, 'Failed to upload resource') })
         };
     }
 };
