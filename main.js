@@ -322,50 +322,77 @@ async function fetchCalendarEvents() {
     const grid = document.getElementById('calendar-grid');
     if (!grid) return;
 
+    // 1. Draw the empty calendar grid first
+    grid.innerHTML = '';
+    
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+
+    // Create headers
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    days.forEach(d => {
+        const header = document.createElement('div');
+        header.className = 'calendar-cell header';
+        header.textContent = d;
+        grid.appendChild(header);
+    });
+
+    // Calculate days in month
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // Empty cells for padding
+    for(let i=0; i < firstDay; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'calendar-cell';
+        empty.style.background = 'transparent';
+        empty.style.border = 'none';
+        grid.appendChild(empty);
+    }
+
+    // Create cells for each day
+    const dayCells = {};
+    for(let i=1; i <= daysInMonth; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'calendar-cell';
+        if(i === today.getDate()) {
+            cell.style.borderColor = 'var(--accent-color)';
+            cell.style.background = 'rgba(59, 130, 246, 0.1)';
+        }
+        
+        const dateLabel = document.createElement('div');
+        dateLabel.className = 'calendar-date';
+        dateLabel.textContent = i;
+        cell.appendChild(dateLabel);
+        
+        grid.appendChild(cell);
+        dayCells[i] = cell;
+    }
+
+    // 2. Fetch and add events
     try {
         const response = await fetch('/.netlify/functions/getCalendarEvents');
         if (!response.ok) throw new Error('Failed to fetch calendar');
         const events = await response.json();
 
-        // Render basic 7 day view for upcoming week
-        grid.innerHTML = '';
-        
-        const today = new Date();
-        // Create headers
-        for(let i=0; i<7; i++) {
-            const d = new Date(today);
-            d.setDate(today.getDate() + i);
-            const header = document.createElement('div');
-            header.className = 'calendar-cell header';
-            header.textContent = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-            grid.appendChild(header);
-        }
-
-        // Create cells
-        const cells = [];
-        for(let i=0; i<7; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'calendar-cell';
-            grid.appendChild(cell);
-            cells.push(cell);
-        }
-
         events.forEach(event => {
             const eventDate = new Date(event.Date);
-            const diffTime = eventDate - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-            
-            if (diffDays >= 0 && diffDays < 7) {
-                const eventDiv = document.createElement('div');
-                eventDiv.className = `calendar-event event-${event.Type}`;
-                eventDiv.textContent = event.Name;
-                eventDiv.title = `ID: ${event.ID}`;
-                cells[diffDays].appendChild(eventDiv);
+            if (eventDate.getFullYear() === year && eventDate.getMonth() === month) {
+                const day = eventDate.getDate();
+                if (dayCells[day]) {
+                    const eventDiv = document.createElement('div');
+                    eventDiv.className = `calendar-event event-${event.Type}`;
+                    eventDiv.textContent = event.Name;
+                    eventDiv.title = `ID: ${event.ID}`;
+                    dayCells[day].appendChild(eventDiv);
+                }
             }
         });
 
     } catch(err) {
-        grid.innerHTML = '<p class="status-message error" style="display:block">Failed to load calendar.</p>';
+        console.error('Failed to load calendar events:', err);
+        // Calendar remains visible, just empty
     }
 }
 
