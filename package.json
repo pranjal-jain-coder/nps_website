@@ -1,0 +1,14 @@
+{
+  "name": "nps-student-portal",
+  "version": "1.0.0",
+  "description": "NPS Student Resource & Communication Portal",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "googleapis": "^126.0.0",
+    "crypto": "^1.0.1"
+  }
+}

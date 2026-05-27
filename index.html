@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NPS Student Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo-container">
+                <div class="logo">NPS</div>
+                <h2>Student Portal</h2>
+            </div>
+            <ul class="nav-links">
+                <li><button class="nav-btn active" data-target="academic-hub">Academic Hub</button></li>
+                <li><button class="nav-btn" data-target="announcements">Announcements</button></li>
+                <li><button class="nav-btn" data-target="fixit-portal">Suggestions</button></li>
+                <li><button class="nav-btn" data-target="house-points">House Points</button></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+            <!-- Academic Hub Tab -->
+            <section id="academic-hub" class="tab-content active">
+                <header class="section-header">
+                    <h1>Academic Resource Hub</h1>
+                    <p>Access study materials and submit documents for review.</p>
+                </header>
+
+                <div class="drive-links-grid">
+                    <!-- PLACEHOLDER: Update href with actual Google Drive folder URLs -->
+                    <a href="https://drive.google.com/drive/folders/1eFZIou32L2y8Okk3sd5FhCdIq6Si7bWA?usp=sharing"
+                        target="_blank" class="drive-card grade-9">
+                        <h3>Grade 9</h3>
+                        <p>Access Resources</p>
+                    </a>
+                    <!-- PLACEHOLDER: Update href with actual Google Drive folder URLs -->
+                    <a href="https://drive.google.com/drive/folders/1wbizmxcrPh9XjFfs8ajKzlzkO6Dvk3iN?usp=sharing"
+                        target="_blank" class="drive-card grade-10">
+                        <h3>Grade 10</h3>
+                        <p>Access Resources</p>
+                    </a>
+                    <!-- PLACEHOLDER: Update href with actual Google Drive folder URLs -->
+                    <a href="https://drive.google.com/drive/folders/1PraI0QrNMkeYfizWR0mMTh_R-HXMh_qu?usp=sharing"
+                        target="_blank" class="drive-card grade-11">
+                        <h3>Grade 11</h3>
+                        <p>Access Resources</p>
+                    </a>
+                    <!-- PLACEHOLDER: Update href with actual Google Drive folder URLs -->
+                    <a href="YOUR_GRADE_12_DRIVE_LINK_HERE" target="_blank" class="drive-card grade-12">
+                        <h3>Grade 12</h3>
+                        <p>Access Resources</p>
+                    </a>
+                </div>
+
+                <div class="upload-section glass-panel">
+                    <h2>Submission Drop-Box</h2>
+                    <form id="upload-form">
+                        <div class="form-group">
+                            <label for="upload-year">Academic Year</label>
+                            <select id="upload-year" required>
+                                <option value="">Select Year</option>
+                                <option value="2023-2024">2023-2024</option>
+                                <option value="2024-2025">2024-2025</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="upload-grade">Grade</label>
+                            <select id="upload-grade" required>
+                                <option value="">Select Grade</option>
+                                <option value="9">Grade 9</option>
+                                <option value="10">Grade 10</option>
+                                <option value="11">Grade 11</option>
+                                <option value="12">Grade 12</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="upload-subject">Subject</label>
+                            <select id="upload-subject" required disabled>
+                                <option value="">Select Grade First</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="upload-type">Exam Type</label>
+                            <select id="upload-type" required disabled>
+                                <option value="">Select Grade First</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="upload-file">Select PDF File (<20MB)< /label>
+                                    <input type="file" id="upload-file" accept="application/pdf" required>
+                        </div>
+                        <button type="submit" class="primary-btn">Upload Document</button>
+                    </form>
+                    <div id="upload-status" class="status-message"></div>
+                </div>
+            </section>
+
+            <!-- Announcements Tab -->
+            <section id="announcements" class="tab-content">
+                <header class="section-header">
+                    <h1>Campus Announcements</h1>
+                    <p>Latest announcements, news, and critical alerts.</p>
+                </header>
+                <div class="pulse-board" id="announcements-container">
+                    <div class="loading-spinner"></div>
+                </div>
+            </section>
+
+            <!-- Fix-It Portal Tab -->
+            <section id="fixit-portal" class="tab-content">
+                <header class="section-header">
+                    <h1>Anonymous Suggestions</h1>
+                    <p>Submit issues or suggestions anonymously. Track resolution status live.</p>
+                </header>
+
+                <div class="fixit-layout">
+                    <div class="fixit-form-container glass-panel">
+                        <h2>Submit a Suggestion</h2>
+                        <form id="suggestion-form">
+                            <div class="form-group">
+                                <label for="sugg-category">Category</label>
+                                <select id="sugg-category" required>
+                                    <option value="Infrastructure">Infrastructure</option>
+                                    <option value="Academics">Academics</option>
+                                    <option value="Culture">Culture</option>
+                                    <option value="Sports">Sports</option>
+                                    <option value="General">General</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="sugg-description">Description</label>
+                                <textarea id="sugg-description" required maxlength="1000" rows="5"
+                                    placeholder="Detail your suggestion..."></textarea>
+                            </div>
+                            <button type="submit" class="primary-btn">Submit Anonymous Suggestion</button>
+                        </form>
+                        <div id="suggestion-status" class="status-message"></div>
+                    </div>
+
+                    <div class="fixit-board">
+                        <h2>Live Status Board</h2>
+                        <div class="status-lanes">
+                            <div class="status-lane">
+                                <h3>Submitted</h3>
+                                <div id="lane-submitted" class="lane-cards"></div>
+                            </div>
+                            <div class="status-lane">
+                                <h3>Under Review / Discussing</h3>
+                                <div id="lane-under-review" class="lane-cards"></div>
+                            </div>
+                            <div class="status-lane">
+                                <h3>Resolved</h3>
+                                <div id="lane-resolved" class="lane-cards"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- House Points Tab -->
+            <section id="house-points" class="tab-content">
+                <header class="section-header">
+                    <h1>House Points Leaderboard</h1>
+                    <p>Live tracking of house competition points.</p>
+                </header>
+                <div class="house-points-container glass-panel">
+                    <div id="house-chart" class="house-chart">
+                        <div class="loading-spinner"></div>
+                    </div>
+                    <p id="house-last-updated" class="last-updated"></p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="main.js"></script>
+</body>
+
+</html>
