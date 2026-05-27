@@ -8,13 +8,13 @@ exports.handler = async (event, context) => {
     }
 
     try {
-        const { category, description } = JSON.parse(event.body);
+        const { category, title, description } = JSON.parse(event.body);
 
-        if (!category || !description) {
+        if (!category || !title || !description) {
             return { statusCode: 400, body: JSON.stringify({ error: 'Missing required fields' }) };
         }
-        
-        // Basic sanitization
+
+        const sanitizedTitle = title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
         const sanitizedDescription = description.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
         const auth = getAuthClient();
@@ -25,7 +25,8 @@ exports.handler = async (event, context) => {
         const timestamp = new Date().toISOString();
         const status = 'Submitted';
 
-        const row = [id, timestamp, category, sanitizedDescription, status];
+        // Schema: ID(A), Timestamp(B), Category(C), Title(D), Description(E), Status(F)
+        const row = [id, timestamp, category, sanitizedTitle, sanitizedDescription, status];
 
         await sheets.spreadsheets.values.append({
             spreadsheetId,

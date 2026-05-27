@@ -9,18 +9,19 @@ exports.handler = async (event, context) => {
 
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Suggestions Ledger!A2:E', // Do not fetch column F (Admin_Notes)
+            // Schema: ID(A), Timestamp(B), Category(C), Title(D), Description(E), Status(F)
+            range: 'Suggestions Ledger!A2:F',
         });
 
         const rows = response.data.values || [];
-        
-        // Map rows to objects
+
         const suggestions = rows.map(row => ({
             ID: row[0] || '',
             Timestamp: row[1] || '',
             Category: row[2] || '',
-            Description: row[3] || '',
-            Status: row[4] || 'Submitted' // default to submitted if blank
+            Title: row[3] || '(No title)',
+            Description: row[4] || row[3] || '', // fallback: old rows had description at index 3
+            Status: row[5] || row[4] || 'Submitted' // fallback for old rows
         }));
 
         // Sort by Timestamp descending

@@ -11,24 +11,28 @@
 
 <body>
     <div class="app-container">
-        <!-- Sidebar Navigation -->
+        <!-- Sidebar -->
         <nav class="sidebar">
             <div class="logo-container">
                 <div class="logo">NPS</div>
                 <h2>Student Portal</h2>
+                <div id="admin-mode-badge" class="admin-mode-badge">Admin Mode</div>
             </div>
             <ul class="nav-links">
                 <li><button class="nav-btn active" data-target="academic-hub">Past Papers</button></li>
                 <li><button class="nav-btn" data-target="announcements">Announcements</button></li>
                 <li><button class="nav-btn" data-target="fixit-portal">Suggestions</button></li>
                 <li><button class="nav-btn" data-target="house-points">House Points</button></li>
-                <li style="margin-top: auto; padding-top: 24px;"><button class="nav-btn" id="admin-login-btn">Admin Login</button></li>
-                <li id="admin-dashboard-nav" style="display: none;"><button class="nav-btn" data-target="admin-dashboard" style="color: #4ade80;">Dashboard</button></li>
+                <li class="nav-auth-li">
+                    <button class="nav-btn" id="admin-login-btn">Admin Login</button>
+                    <button class="nav-btn nav-btn-logout" id="admin-logout-btn">Logout</button>
+                </li>
             </ul>
         </nav>
 
-        <!-- Main Content Area -->
+        <!-- Main Content -->
         <main class="content-area">
+
             <!-- Past Papers Tab -->
             <section id="academic-hub" class="tab-content active">
                 <header class="section-header">
@@ -37,29 +41,17 @@
                 </header>
 
                 <div class="drive-links-grid">
-                    <!-- PLACEHOLDER: Update href with actual Google Drive folder URLs -->
-                    <a href="https://drive.google.com/drive/folders/1eFZIou32L2y8Okk3sd5FhCdIq6Si7bWA?usp=sharing"
-                        target="_blank" class="drive-card grade-9">
-                        <h3>Grade 9</h3>
-                        <p>Access Resources</p>
+                    <a href="https://drive.google.com/drive/folders/1eFZIou32L2y8Okk3sd5FhCdIq6Si7bWA?usp=sharing" target="_blank" class="drive-card grade-9">
+                        <h3>Grade 9</h3><p>Access Resources</p>
                     </a>
-                    <!-- PLACEHOLDER: Update href with actual Google Drive folder URLs -->
-                    <a href="https://drive.google.com/drive/folders/1wbizmxcrPh9XjFfs8ajKzlzkO6Dvk3iN?usp=sharing"
-                        target="_blank" class="drive-card grade-10">
-                        <h3>Grade 10</h3>
-                        <p>Access Resources</p>
+                    <a href="https://drive.google.com/drive/folders/1wbizmxcrPh9XjFfs8ajKzlzkO6Dvk3iN?usp=sharing" target="_blank" class="drive-card grade-10">
+                        <h3>Grade 10</h3><p>Access Resources</p>
                     </a>
-                    <!-- PLACEHOLDER: Update href with actual Google Drive folder URLs -->
-                    <a href="https://drive.google.com/drive/folders/1PraI0QrNMkeYfizWR0mMTh_R-HXMh_qu?usp=sharing"
-                        target="_blank" class="drive-card grade-11">
-                        <h3>Grade 11</h3>
-                        <p>Access Resources</p>
+                    <a href="https://drive.google.com/drive/folders/1PraI0QrNMkeYfizWR0mMTh_R-HXMh_qu?usp=sharing" target="_blank" class="drive-card grade-11">
+                        <h3>Grade 11</h3><p>Access Resources</p>
                     </a>
-                    <!-- PLACEHOLDER: Update href with actual Google Drive folder URLs -->
-                    <a href="https://drive.google.com/drive/folders/1yWlsFIxqP_Z3HbToKUmZCfYlvZoRlgg-?usp=sharing"
-                        target="_blank" class="drive-card grade-12">
-                        <h3>Grade 12</h3>
-                        <p>Access Resources</p>
+                    <a href="https://drive.google.com/drive/folders/1yWlsFIxqP_Z3HbToKUmZCfYlvZoRlgg-?usp=sharing" target="_blank" class="drive-card grade-12">
+                        <h3>Grade 12</h3><p>Access Resources</p>
                     </a>
                 </div>
 
@@ -97,12 +89,32 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="upload-file">Select PDF File (<20MB)< /label>
-                                    <input type="file" id="upload-file" accept="application/pdf" required>
+                            <label for="upload-file">Select PDF File (&lt;20MB)</label>
+                            <input type="file" id="upload-file" accept="application/pdf" required>
                         </div>
                         <button type="submit" class="primary-btn">Upload Document</button>
                     </form>
                     <div id="upload-status" class="status-message"></div>
+                </div>
+
+                <!-- Admin: submissions review -->
+                <div class="admin-panel glass-panel" style="margin-top: 2rem;">
+                    <div class="admin-panel-header">
+                        <h2>Submitted Documents</h2>
+                        <button id="refresh-submissions-btn" class="secondary-btn">Refresh</button>
+                    </div>
+                    <div style="overflow-x: auto; margin-top: 1rem;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th><th>Grade</th><th>Subject</th><th>Type</th><th>File</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-submissions-list">
+                                <tr><td colspan="5" style="text-align:center; color: var(--text-secondary);">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
@@ -112,16 +124,92 @@
                     <h1>Campus Announcements</h1>
                     <p>Latest announcements, news, and critical alerts.</p>
                 </header>
+
+                <!-- Admin post controls -->
+                <div class="admin-panel glass-panel" style="margin-bottom: 2rem;">
+                    <h2 style="margin-bottom: 1.5rem;">Admin Controls</h2>
+                    <div class="ann-admin-grid">
+                        <div>
+                            <h3 class="admin-subheading">Add Calendar Event</h3>
+                            <form id="admin-calendar-form">
+                                <div class="form-group">
+                                    <label for="admin-cal-date">Date</label>
+                                    <input type="date" id="admin-cal-date" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="admin-cal-name">Event Name</label>
+                                    <input type="text" id="admin-cal-name" required placeholder="e.g. PT 1 Exams">
+                                </div>
+                                <div class="form-group">
+                                    <label for="admin-cal-type">Type</label>
+                                    <select id="admin-cal-type">
+                                        <option value="Academic">Academic</option>
+                                        <option value="Cultural">Cultural</option>
+                                        <option value="Sports">Sports</option>
+                                        <option value="Holiday">Holiday</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="primary-btn">Add Event</button>
+                                <div id="admin-cal-status" class="status-message"></div>
+                            </form>
+                        </div>
+                        <div>
+                            <h3 class="admin-subheading">Post Announcement</h3>
+                            <form id="admin-announcement-form">
+                                <div class="form-group">
+                                    <label for="admin-ann-title">Title</label>
+                                    <input type="text" id="admin-ann-title" required placeholder="Announcement title">
+                                </div>
+                                <div class="form-group">
+                                    <label for="admin-ann-content">Content</label>
+                                    <textarea id="admin-ann-content" required rows="3" placeholder="Announcement content"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="admin-ann-type">Type</label>
+                                    <select id="admin-ann-type">
+                                        <option value="General">General</option>
+                                        <option value="Academic">Academic</option>
+                                        <option value="Inter-School">Inter-School</option>
+                                        <option value="MUN">MUN</option>
+                                        <option value="Inter-House">Inter-House</option>
+                                        <option value="Sports">Sports</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Link Calendar Events</label>
+                                    <div id="admin-event-picker" class="event-picker">
+                                        <p style="color: var(--text-secondary); font-size: 14px;">Loading events…</p>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="admin-ann-file">Attachment (optional — PDF, image, etc.)</label>
+                                    <input type="file" id="admin-ann-file" accept=".pdf,.png,.jpg,.jpeg,.docx,.pptx">
+                                    <div id="admin-ann-file-status" class="status-message"></div>
+                                </div>
+                                <button type="submit" class="primary-btn">Post Announcement</button>
+                                <div id="admin-ann-status" class="status-message"></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Calendar first -->
+                <div class="glass-panel" style="margin-bottom: 2rem;">
+                    <div class="calendar-header">
+                        <button class="cal-nav-btn" id="cal-prev">&#8592;</button>
+                        <h2 id="calendar-title">Event Calendar</h2>
+                        <button class="cal-nav-btn" id="cal-next">&#8594;</button>
+                    </div>
+                    <div id="calendar-grid" class="calendar-grid"></div>
+                </div>
+
+                <!-- Announcements below -->
                 <div class="pulse-board" id="announcements-container">
                     <div class="loading-spinner"></div>
                 </div>
-                <div class="glass-panel" style="margin-top: 2rem;">
-                    <h2 style="margin-bottom: 1rem;">Event Calendar</h2>
-                    <div id="calendar-grid" class="calendar-grid"></div>
-                </div>
             </section>
 
-            <!-- Fix-It Portal Tab -->
+            <!-- Suggestions Tab -->
             <section id="fixit-portal" class="tab-content">
                 <header class="section-header">
                     <h1>Anonymous Suggestions</h1>
@@ -143,8 +231,12 @@
                                 </select>
                             </div>
                             <div class="form-group">
+                                <label for="sugg-title">Title</label>
+                                <input type="text" id="sugg-title" required maxlength="100" placeholder="Brief title for your suggestion">
+                            </div>
+                            <div class="form-group">
                                 <label for="sugg-description">Description</label>
-                                <textarea id="sugg-description" required maxlength="1000" rows="5"
+                                <textarea id="sugg-description" required maxlength="1000" rows="4"
                                     placeholder="Detail your suggestion..."></textarea>
                             </div>
                             <button type="submit" class="primary-btn">Submit Anonymous Suggestion</button>
@@ -160,7 +252,7 @@
                                 <div id="lane-submitted" class="lane-cards"></div>
                             </div>
                             <div class="status-lane">
-                                <h3>Under Review / Discussing</h3>
+                                <h3>Under Review</h3>
                                 <div id="lane-under-review" class="lane-cards"></div>
                             </div>
                             <div class="status-lane">
@@ -178,131 +270,18 @@
                     <h1>House Points Leaderboard</h1>
                     <p>Live tracking of house competition points.</p>
                 </header>
-                <div class="house-points-container glass-panel">
-                    <div id="house-chart" class="house-chart">
-                        <div class="loading-spinner"></div>
-                    </div>
-                    <p id="house-last-updated" class="last-updated"></p>
+                <div id="house-points-content" class="glass-panel">
+                    <div class="loading-spinner"></div>
                 </div>
             </section>
 
-            <!-- Admin Dashboard Tab -->
-            <section id="admin-dashboard" class="tab-content">
-                <header class="section-header">
-                    <h1>Admin Dashboard</h1>
-                    <p>Manage announcements, calendar events, house points, and submissions.</p>
-                    <button id="admin-logout-btn" class="primary-btn" style="margin-top: 0.5rem;">Logout</button>
-                </header>
-
-                <div class="glass-panel" style="margin-bottom: 1.5rem;">
-                    <h2>Post Announcement</h2>
-                    <form id="admin-announcement-form">
-                        <div class="form-group">
-                            <label for="admin-ann-title">Title</label>
-                            <input type="text" id="admin-ann-title" required placeholder="Announcement title">
-                        </div>
-                        <div class="form-group">
-                            <label for="admin-ann-content">Content</label>
-                            <textarea id="admin-ann-content" required rows="3" placeholder="Announcement content"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="admin-ann-priority">Priority</label>
-                            <select id="admin-ann-priority">
-                                <option value="normal">Normal</option>
-                                <option value="high">High</option>
-                                <option value="critical">Critical</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="admin-ann-event-id">Event ID (optional)</label>
-                            <input type="text" id="admin-ann-event-id" placeholder="Link to calendar event ID">
-                        </div>
-                        <div class="form-group">
-                            <label for="admin-ann-url">URL (optional)</label>
-                            <input type="url" id="admin-ann-url" placeholder="https://...">
-                        </div>
-                        <button type="submit" class="primary-btn">Post Announcement</button>
-                    </form>
-                    <div id="admin-ann-status" class="status-message"></div>
-                </div>
-
-                <div class="glass-panel" style="margin-bottom: 1.5rem;">
-                    <h2>Add Calendar Event</h2>
-                    <form id="admin-calendar-form">
-                        <div class="form-group">
-                            <label for="admin-cal-date">Date</label>
-                            <input type="date" id="admin-cal-date" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="admin-cal-name">Event Name</label>
-                            <input type="text" id="admin-cal-name" required placeholder="Event name">
-                        </div>
-                        <div class="form-group">
-                            <label for="admin-cal-type">Type</label>
-                            <select id="admin-cal-type">
-                                <option value="exam">Exam</option>
-                                <option value="holiday">Holiday</option>
-                                <option value="event">Event</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="primary-btn">Add Event</button>
-                    </form>
-                    <div id="admin-cal-status" class="status-message"></div>
-                </div>
-
-                <div class="glass-panel" style="margin-bottom: 1.5rem;">
-                    <h2>Update House Points</h2>
-                    <form id="admin-house-form">
-                        <div class="form-group">
-                            <label for="admin-house-name">House</label>
-                            <select id="admin-house-name" required>
-                                <option value="">Select House</option>
-                                <option value="Raman">Raman</option>
-                                <option value="Tagore">Tagore</option>
-                                <option value="Teresa">Teresa</option>
-                                <option value="Kalam">Kalam</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="admin-house-points">Points</label>
-                            <input type="number" id="admin-house-points" required placeholder="Points to add">
-                        </div>
-                        <div class="form-group">
-                            <label for="admin-house-reason">Reason</label>
-                            <input type="text" id="admin-house-reason" required placeholder="Reason for points">
-                        </div>
-                        <button type="submit" class="primary-btn">Update Points</button>
-                    </form>
-                    <div id="admin-house-status" class="status-message"></div>
-                </div>
-
-                <div class="glass-panel">
-                    <h2>Document Submissions <button id="refresh-submissions-btn" class="primary-btn" style="margin-left: 1rem; padding: 0.4rem 0.8rem; font-size: 0.85rem;">Refresh</button></h2>
-                    <div style="overflow-x: auto; margin-top: 1rem;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr style="border-bottom: 1px solid var(--border-color);">
-                                    <th style="text-align:left; padding: 0.5rem;">Date</th>
-                                    <th style="text-align:left; padding: 0.5rem;">Grade</th>
-                                    <th style="text-align:left; padding: 0.5rem;">Subject</th>
-                                    <th style="text-align:left; padding: 0.5rem;">Type</th>
-                                    <th style="text-align:left; padding: 0.5rem;">File</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-submissions-list">
-                                <tr><td colspan="5">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
         </main>
     </div>
 
     <!-- Login Modal -->
     <div id="login-modal" class="modal">
         <div class="modal-content glass-panel">
-            <button id="close-modal-btn" class="modal-close">&times;</button>
+            <button class="modal-close" id="close-modal-btn">&times;</button>
             <h2>Admin Login</h2>
             <form id="login-form">
                 <div class="form-group">
@@ -314,6 +293,23 @@
             <div id="login-status" class="status-message"></div>
         </div>
     </div>
+
+    <!-- Suggestion Detail Modal -->
+    <div id="suggestion-modal" class="modal">
+        <div class="modal-content modal-wide glass-panel">
+            <button class="modal-close" id="sugg-modal-close">&times;</button>
+            <div id="suggestion-modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Edit Modal (announcements & calendar events) -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content glass-panel">
+            <button class="modal-close" id="edit-modal-close">&times;</button>
+            <div id="edit-modal-body"></div>
+        </div>
+    </div>
+
     <script src="main.js"></script>
 </body>
 

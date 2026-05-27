@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Guide — NPS Student Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: rgba(30,41,59,0.8);
+            --border: rgba(255,255,255,0.1);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --accent: #3b82f6;
+            --green: #4ade80;
+            --amber: #f59e0b;
+            --red: #f87171;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 48px 24px;
+        }
+        .page { max-width: 860px; margin: 0 auto; }
+        header { margin-bottom: 48px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+        header h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+        header p { color: var(--muted); font-size: 16px; }
+        .back-link { display: inline-block; margin-bottom: 24px; color: var(--accent); text-decoration: none; font-size: 14px; }
+        .back-link:hover { text-decoration: underline; }
+
+        /* Sections */
+        .section { margin-bottom: 56px; }
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--accent);
+            color: var(--accent);
+        }
+
+        /* Cards */
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        .card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card p, .card li { color: var(--muted); font-size: 14px; }
+        .card ul, .card ol { padding-left: 20px; margin-top: 8px; }
+        .card li { margin-bottom: 6px; }
+        .card li strong { color: var(--text); }
+
+        /* Icon badges */
+        .icon {
+            width: 28px; height: 28px;
+            border-radius: 6px;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .icon-blue { background: rgba(59,130,246,0.2); }
+        .icon-green { background: rgba(74,222,128,0.2); }
+        .icon-amber { background: rgba(245,158,11,0.2); }
+        .icon-red { background: rgba(248,113,113,0.2); }
+        .icon-purple { background: rgba(139,92,246,0.2); }
+
+        /* Code / path snippets */
+        code {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 2px 7px;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+            color: #e2e8f0;
+        }
+        pre {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+            color: #e2e8f0;
+            margin-top: 12px;
+            line-height: 1.6;
+        }
+
+        /* Callout boxes */
+        .callout {
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-top: 12px;
+            font-size: 14px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .callout-info { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: #93c5fd; }
+        .callout-warn { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: #fcd34d; }
+
+        /* Schema table */
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+        th { text-align: left; padding: 10px 14px; background: rgba(255,255,255,0.05); color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        td:first-child { color: var(--text); font-weight: 500; font-family: 'Courier New', monospace; font-size: 13px; }
+        tr:last-child td { border-bottom: none; }
+
+        /* Step list */
+        .steps { counter-reset: steps; }
+        .step { display: flex; gap: 16px; margin-bottom: 16px; }
+        .step-num {
+            width: 28px; height: 28px; flex-shrink: 0;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700; color: #fff;
+        }
+        .step-body { padding-top: 4px; }
+        .step-body strong { display: block; margin-bottom: 4px; color: var(--text); font-size: 14px; }
+        .step-body p { color: var(--muted); font-size: 14px; }
+
+        /* TOC */
+        .toc { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 48px; }
+        .toc h2 { font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+        .toc a { display: block; color: var(--accent); text-decoration: none; font-size: 14px; padding: 4px 0; }
+        .toc a:hover { text-decoration: underline; }
+        .toc .toc-sub { padding-left: 16px; color: var(--muted); font-size: 13px; }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <a class="back-link" href="index.html">← Back to Portal</a>
+
+    <header>
+        <h1>NPS Student Portal — Admin Guide</h1>
+        <p>Everything you need to manage the portal. Keep this page bookmarked.</p>
+    </header>
+
+    <nav class="toc">
+        <h2>Contents</h2>
+        <a href="#section-usage">Section 1: Usage Guide</a>
+        <a href="#login" class="toc-sub">→ Logging In &amp; Out</a>
+        <a href="#announcements" class="toc-sub">→ Announcements</a>
+        <a href="#calendar" class="toc-sub">→ Calendar Events</a>
+        <a href="#suggestions" class="toc-sub">→ Suggestions</a>
+        <a href="#house-points" class="toc-sub">→ House Points</a>
+        <a href="#past-papers" class="toc-sub">→ Past Papers / Submissions</a>
+        <a href="#section-dropdowns">Section 2: Editing Category Dropdowns</a>
+        <a href="#spreadsheet" class="toc-sub">→ Spreadsheet Reference</a>
+    </nav>
+
+    <!-- ===================== SECTION 1 ===================== -->
+    <div class="section" id="section-usage">
+        <div class="section-title">Section 1 — Usage Guide</div>
+
+        <!-- Login -->
+        <div class="card" id="login">
+            <h3><span class="icon icon-green">🔑</span> Logging In &amp; Out</h3>
+            <ol class="steps" style="list-style:none;padding:0;margin-top:12px;">
+                <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Click "Admin Login"</strong><p>At the bottom of the left sidebar.</p></div></div>
+                <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Enter the password</strong><p>The admin password is stored as a Netlify environment variable (<code>ADMIN_PASSWORD</code>). Contact the developer to change it.</p></div></div>
+                <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Admin Mode activates</strong><p>A green "Admin Mode" badge appears under the NPS logo, a "Logout" button replaces the login button, and extra controls appear throughout the portal.</p></div></div>
+            </ol>
+            <div class="callout callout-warn">⚠ Admin tokens are stored in the browser. Always log out when using a shared device.</div>
+        </div>
+
+        <!-- Announcements -->
+        <div class="card" id="announcements">
+            <h3><span class="icon icon-blue">📢</span> Posting &amp; Editing Announcements</h3>
+            <p>Admin controls appear at the top of the Announcements tab.</p>
+            <ul>
+                <li><strong>Title &amp; Content</strong> — the main text of the announcement.</li>
+                <li><strong>Type</strong> — sets the colour stripe on the card. Options: General, Academic, Inter-School, MUN, Inter-House, Sports.</li>
+                <li><strong>Link Calendar Events</strong> — tick one or more events from the list to show them as chips on the card. Events must be added to the calendar first.</li>
+                <li><strong>Attachment</strong> — upload a PDF, image, Word doc, or PowerPoint. It is uploaded to the <em>NPS Announcement Attachments</em> Drive folder automatically and a "View Attachment" link appears on the card.</li>
+            </ul>
+            <div class="callout callout-info">ℹ To <strong>edit or delete</strong> a posted announcement, scroll to the card and click the <strong>Edit</strong> or <strong>Delete</strong> button that appears at the bottom of each card when you are in Admin Mode.</div>
+        </div>
+
+        <!-- Calendar -->
+        <div class="card" id="calendar">
+            <h3><span class="icon icon-amber">📅</span> Managing Calendar Events</h3>
+            <ul>
+                <li><strong>Adding</strong> — use the "Add Calendar Event" form in the Announcements tab admin panel. Set the date, name, and type (Academic / Cultural / Sports / Holiday).</li>
+                <li><strong>Navigating months</strong> — use the ← → arrows on either side of the calendar title to move between months.</li>
+                <li><strong>Editing / deleting</strong> — in Admin Mode, click any event chip inside the calendar grid. An edit modal opens with pre-filled fields and a Delete button.</li>
+            </ul>
+            <div class="callout callout-warn">⚠ Deleting a calendar event does NOT remove it from announcement links automatically. Re-edit those announcements to uncheck the deleted event.</div>
+        </div>
+
+        <!-- Suggestions -->
+        <div class="card" id="suggestions">
+            <h3><span class="icon icon-purple">💬</span> Managing Suggestions</h3>
+            <p>Suggestions are shown in three columns: <strong>Submitted → Under Review → Resolved</strong>.</p>
+            <ul>
+                <li><strong>View details</strong> — click any suggestion card to open its full detail view (visible to all users).</li>
+                <li><strong>Move status</strong> — inside the detail modal, use the "Move to Under Review ▶" / "Back to Submitted ◀" etc. buttons. The card moves columns immediately.</li>
+                <li><strong>Edit</strong> — scroll down in the detail modal to the "Edit Suggestion" form. You can change the category, title, and description.</li>
+                <li><strong>Delete</strong> — click "✕ Delete" in the detail modal. This permanently removes it from the spreadsheet.</li>
+            </ul>
+        </div>
+
+        <!-- House Points -->
+        <div class="card" id="house-points">
+            <h3><span class="icon icon-amber">🏆</span> House Points</h3>
+            <p>The House Points tab shows current totals as summary cards and a full history ledger.</p>
+            <ul>
+                <li><strong>Adding an entry</strong> — scroll to the bottom of the House Points tab. Fill in a Reason, then enter a point change (positive or negative) for one or more houses. Submitting adds one ledger row per house that had a value.</li>
+                <li><strong>Negative points</strong> — just enter a negative number (e.g. <code>-10</code>). It appears in red in the ledger.</li>
+                <li><strong>History is public</strong> — all users see the full ledger and totals. There is no way to hide rows; think before you post a reason.</li>
+            </ul>
+            <div class="callout callout-warn">⚠ There is currently no delete/edit for house point entries. If you make a mistake, add a correcting entry with an explanation in the Reason field (e.g. "Correction — reversed duplicate entry").</div>
+        </div>
+
+        <!-- Past Papers -->
+        <div class="card" id="past-papers">
+            <h3><span class="icon icon-green">📄</span> Past Papers / Submissions</h3>
+            <p><strong>Students</strong> upload files via the Submission Drop-Box on the Past Papers tab.</p>
+            <p style="margin-top:8px;"><strong>Files are named automatically:</strong></p>
+            <pre>{year}_Grade{grade}_{subject}_{examType}_{originalFilename}
+Example: 2024-2025_Grade11_Physics_Half-Yearly_scan1.pdf</pre>
+            <p style="margin-top:12px;">Files land in the <strong>PENDING_DRIVE_FOLDER_ID</strong> folder in Google Drive (set in Netlify env vars).</p>
+            <ul style="margin-top:12px;">
+                <li><strong>Reviewing</strong> — in Admin Mode, a "Submitted Documents" table appears at the bottom of the Past Papers tab. Click "View File" to open the PDF in Drive.</li>
+                <li><strong>Approving</strong> — manually move the file from the Pending folder to the appropriate grade's public folder in Drive. There is no in-app approve button — the review table is read-only.</li>
+                <li><strong>Naming tip</strong> — ask students to name their files descriptively before uploading. The system prepends the metadata but keeps the original filename.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ===================== SECTION 2 ===================== -->
+    <div class="section" id="section-dropdowns">
+        <div class="section-title">Section 2 — Editing Category Dropdowns</div>
+
+        <div class="card">
+            <h3><span class="icon icon-blue">🗂</span> Overview</h3>
+            <p>Dropdowns are defined in two places: the <strong>HTML</strong> (what users see) and sometimes the <strong>JavaScript</strong> (colour maps, logic). A third place — the <strong>spreadsheet header row</strong> — is for your own reference and doesn't need to match exactly, but keeping it consistent is good practice.</p>
+            <p style="margin-top:8px;">All files are in the root of the project. Edit them in any text editor or VS Code.</p>
+        </div>
+
+        <div class="card">
+            <h3><span class="icon icon-amber">📣</span> Announcement Types</h3>
+            <p><strong>Where to edit:</strong> <code>index.html</code> and <code>main.js</code></p>
+            <p style="margin-top:8px;"><strong>1. Add/remove options in <code>index.html</code></strong> — find the "Post Announcement" form:</p>
+<pre>&lt;select id="admin-ann-type"&gt;
+    &lt;option value="General"&gt;General&lt;/option&gt;
+    &lt;option value="Academic"&gt;Academic&lt;/option&gt;
+    &lt;option value="Inter-School"&gt;Inter-School&lt;/option&gt;
+    &lt;option value="MUN"&gt;MUN&lt;/option&gt;
+    &lt;option value="Inter-House"&gt;Inter-House&lt;/option&gt;
+    &lt;option value="Sports"&gt;Sports&lt;/option&gt;
+&lt;/select&gt;</pre>
+            <p style="margin-top:12px;"><strong>2. Add a colour in <code>main.js</code></strong> — find the <code>ANN_TYPE_COLORS</code> object near the top:</p>
+<pre>const ANN_TYPE_COLORS = {
+    General:        '#64748b',
+    Academic:       '#f59e0b',
+    'Inter-School': '#3b82f6',
+    MUN:            '#8b5cf6',
+    'Inter-House':  '#f97316',
+    Sports:         '#10b981',
+    // Add new type here, e.g.:
+    // 'Cultural':  '#ec4899',
+};</pre>
+            <p style="margin-top:8px;">The key must match the <code>value</code> attribute in the HTML exactly (case-sensitive).</p>
+            <div class="callout callout-info">ℹ Also update the type list in the Edit Announcement modal inside <code>openAnnouncementEdit()</code> in <code>main.js</code> — look for the line <code>const annTypes = [...]</code>.</div>
+        </div>
+
+        <div class="card">
+            <h3><span class="icon icon-purple">💬</span> Suggestion Categories</h3>
+            <p><strong>Where to edit:</strong> <code>index.html</code> and <code>main.js</code></p>
+            <p style="margin-top:8px;"><strong>1. Add/remove options in <code>index.html</code></strong> — find the "Submit a Suggestion" form and the "Edit Suggestion" form:</p>
+<pre>&lt;select id="sugg-category"&gt;
+    &lt;option value="Infrastructure"&gt;Infrastructure&lt;/option&gt;
+    &lt;option value="Academics"&gt;Academics&lt;/option&gt;
+    &lt;option value="Culture"&gt;Culture&lt;/option&gt;
+    &lt;option value="Sports"&gt;Sports&lt;/option&gt;
+    &lt;option value="General"&gt;General&lt;/option&gt;
+&lt;/select&gt;</pre>
+            <p style="margin-top:12px;"><strong>2. Add a colour in <code>main.js</code></strong> — find the <code>CATEGORY_COLORS</code> object:</p>
+<pre>const CATEGORY_COLORS = {
+    Infrastructure: { bg: 'rgba(249,115,22,0.15)', border: '#f97316', text: '#fb923c' },
+    Academics:      { bg: 'rgba(59,130,246,0.15)',  border: '#3b82f6', text: '#60a5fa' },
+    Culture:        { bg: 'rgba(236,72,153,0.15)',  border: '#ec4899', text: '#f472b6' },
+    Sports:         { bg: 'rgba(16,185,129,0.15)',  border: '#10b981', text: '#34d399' },
+    General:        { bg: 'rgba(139,92,246,0.15)',  border: '#8b5cf6', text: '#a78bfa' },
+};</pre>
+            <p style="margin-top:8px;">Each entry needs three values: <code>bg</code> (card background), <code>border</code> (left accent), and <code>text</code> (badge colour).</p>
+            <p style="margin-top:8px;">Also update the edit-suggestion dropdown in <code>openSuggestionDetail()</code> in <code>main.js</code> — look for the array <code>['Infrastructure','Academics','Culture','Sports','General']</code>.</p>
+        </div>
+
+        <div class="card">
+            <h3><span class="icon icon-green">📅</span> Calendar Event Types</h3>
+            <p><strong>Where to edit:</strong> <code>index.html</code> and <code>style.css</code></p>
+            <p style="margin-top:8px;"><strong>1. Add/remove options in <code>index.html</code></strong> — there are two selects, one in "Add Calendar Event" and one in the edit modal template inside <code>openCalendarEventEdit()</code> in <code>main.js</code>:</p>
+<pre>&lt;select id="admin-cal-type"&gt;
+    &lt;option value="Academic"&gt;Academic&lt;/option&gt;
+    &lt;option value="Cultural"&gt;Cultural&lt;/option&gt;
+    &lt;option value="Sports"&gt;Sports&lt;/option&gt;
+    &lt;option value="Holiday"&gt;Holiday&lt;/option&gt;
+&lt;/select&gt;</pre>
+            <p style="margin-top:12px;"><strong>2. Add colours in <code>style.css</code></strong> — find the event type rules near the bottom:</p>
+<pre>.event-Academic { border-left-color: #f59e0b; background: rgba(245,158,11,0.2); }
+.event-Cultural { border-left-color: #ec4899; background: rgba(236,72,153,0.2); }
+.event-Sports   { border-left-color: #10b981; background: rgba(16,185,129,0.2); }
+.event-Holiday  { border-left-color: #ef4444; background: rgba(239,68,68,0.2); }
+/* Add: .event-NewType { border-left-color: #???; background: rgba(?,?,?,0.2); } */</pre>
+            <p style="margin-top:8px;">The CSS class name must be <code>.event-{TypeValue}</code> where <code>TypeValue</code> exactly matches the option value.</p>
+        </div>
+
+        <!-- Spreadsheet reference -->
+        <div class="card" id="spreadsheet">
+            <h3><span class="icon icon-blue">📊</span> Spreadsheet Reference</h3>
+            <p>The portal reads from a single Google Sheet (<code>MASTER_SPREADSHEET_ID</code> in Netlify env). Each tab has a fixed schema — <strong>do not reorder or rename columns</strong>.</p>
+
+            <p style="margin-top:16px; font-weight:600;">Announcements Board</p>
+            <table>
+                <tr><th>Col</th><th>Field</th><th>Values</th></tr>
+                <tr><td>A</td><td>Date</td><td>YYYY-MM-DD (auto)</td></tr>
+                <tr><td>B</td><td>Type</td><td>General / Academic / Inter-School / MUN / Inter-House / Sports</td></tr>
+                <tr><td>C</td><td>Title</td><td>text</td></tr>
+                <tr><td>D</td><td>Content</td><td>text</td></tr>
+                <tr><td>E</td><td>Attachment_URL</td><td>Drive view URL (auto)</td></tr>
+                <tr><td>F</td><td>Event_IDs</td><td>comma-separated UUIDs (auto)</td></tr>
+                <tr><td>G</td><td>ID</td><td>UUID (auto)</td></tr>
+            </table>
+
+            <p style="margin-top:16px; font-weight:600;">Suggestions Ledger</p>
+            <table>
+                <tr><th>Col</th><th>Field</th><th>Values</th></tr>
+                <tr><td>A</td><td>ID</td><td>UUID (auto)</td></tr>
+                <tr><td>B</td><td>Timestamp</td><td>ISO datetime (auto)</td></tr>
+                <tr><td>C</td><td>Category</td><td>Infrastructure / Academics / Culture / Sports / General</td></tr>
+                <tr><td>D</td><td>Title</td><td>text</td></tr>
+                <tr><td>E</td><td>Description</td><td>text</td></tr>
+                <tr><td>F</td><td>Status</td><td>Submitted / Under Review / Resolved</td></tr>
+            </table>
+
+            <p style="margin-top:16px; font-weight:600;">Calendar Deadlines</p>
+            <table>
+                <tr><th>Col</th><th>Field</th><th>Values</th></tr>
+                <tr><td>A</td><td>ID</td><td>UUID (auto)</td></tr>
+                <tr><td>B</td><td>Date</td><td>YYYY-MM-DD</td></tr>
+                <tr><td>C</td><td>Name</td><td>text</td></tr>
+                <tr><td>D</td><td>Type</td><td>Academic / Cultural / Sports / Holiday</td></tr>
+            </table>
+
+            <p style="margin-top:16px; font-weight:600;">House Points System</p>
+            <table>
+                <tr><th>Col</th><th>Field</th><th>Values</th></tr>
+                <tr><td>A</td><td>Date</td><td>YYYY-MM-DD (auto)</td></tr>
+                <tr><td>B</td><td>House</td><td>Challengers / Explorers / Pioneers / Voyagers</td></tr>
+                <tr><td>C</td><td>Points</td><td>integer (can be negative)</td></tr>
+                <tr><td>D</td><td>Reason</td><td>text</td></tr>
+            </table>
+
+            <p style="margin-top:16px; font-weight:600;">Submissions</p>
+            <table>
+                <tr><th>Col</th><th>Field</th><th>Notes</th></tr>
+                <tr><td>A</td><td>FileID</td><td>Google Drive file ID (auto)</td></tr>
+                <tr><td>B</td><td>Timestamp</td><td>ISO datetime (auto)</td></tr>
+                <tr><td>C</td><td>Subject</td><td>from upload form</td></tr>
+                <tr><td>D</td><td>Year</td><td>e.g. 2024-2025</td></tr>
+                <tr><td>E</td><td>Grade</td><td>9 / 10 / 11 / 12</td></tr>
+                <tr><td>F</td><td>Type</td><td>exam type (PT 1, Half-Yearly, etc.)</td></tr>
+            </table>
+
+            <div class="callout callout-warn" style="margin-top:16px;">⚠ Row 1 of each tab is the header row — never delete it. Data starts at row 2.</div>
+        </div>
+
+    </div>
+
+    <footer style="margin-top:48px;padding-top:24px;border-top:1px solid var(--border);color:var(--muted);font-size:13px;text-align:center;">
+        NPS Student Portal Admin Guide · Keep this page bookmarked, not shared publicly.
+    </footer>
+
+</div>
+</body>
+</html>
