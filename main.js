@@ -10,13 +10,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('suggestion-form').addEventListener('submit', handleSuggestionSubmit);
     document.getElementById('upload-form').addEventListener('submit', handleFileUpload);
     document.getElementById('upload-grade').addEventListener('change', handleGradeChange);
+    
+    // Init Admin features
+    initAdminAuth();
+    fetchCalendarEvents();
 });
 
 const gradeData = {
-    '9': { subjects: ['Math', 'Science', 'English', 'History', 'Geography'], exams: ['Midterm', 'Final', 'Unit Test'] },
-    '10': { subjects: ['Math', 'Science', 'English', 'History', 'Geography'], exams: ['Midterm', 'Final', 'Board Prep'] },
-    '11': { subjects: ['Physics', 'Chemistry', 'Math', 'Biology', 'Computer Science', 'Economics', 'Accountancy', 'Business Studies'], exams: ['Unit Test', 'Midterm', 'Final'] },
-    '12': { subjects: ['Physics', 'Chemistry', 'Math', 'Biology', 'Computer Science', 'Economics', 'Accountancy', 'Business Studies'], exams: ['Pre-Board', 'Board Exam', 'Unit Test'] }
+    '9': { subjects: ['English', 'Hindi', 'French', 'Sanskrit', 'Kannada', 'Math', 'Science', 'Social Science'], exams: ['PT 1', 'Half-Yearly', 'PT 3', 'Annual-Exam'] },
+    '10': { subjects: ['English', 'Hindi', 'French', 'Sanskrit', 'Kannada', 'Math', 'Science', 'Social Science'], exams: ['PT 1', 'Half-Yearly', 'Pre-board 1', 'PT 3', 'Pre-board 2'] },
+    '11': { subjects: ['English', 'Math', 'Physics', 'Chemistry', 'Biology', 'Computer Science', 'Economics', 'Psychology', 'Accountancy', 'Business Studies', 'Applied Mathematics', 'Entrepreneurship', 'Informatics Practices', 'History'], exams: ['UT 1', 'UT 2', 'Half-Yearly', 'UT 3', 'UT 4', 'Annual-Exam'] },
+    '12': { subjects: ['English', 'Math', 'Physics', 'Chemistry', 'Biology', 'Computer Science', 'Economics', 'Psychology', 'Accountancy', 'Business Studies', 'Applied Mathematics', 'Entrepreneurship', 'Informatics Practices', 'History'], exams: ['UT 1', 'UT 2', 'Half-Yearly', 'UT 3', 'UT 4', 'Annual-Exam'] }
 };
 
 function handleGradeChange(e) {
@@ -189,19 +193,19 @@ async function handleSuggestionSubmit(e) {
 async function fetchHousePoints() {
     const container = document.getElementById('house-chart');
     const lastUpdated = document.getElementById('house-last-updated');
+    const historyTable = document.getElementById('admin-house-history');
     
     try {
         const response = await fetch('/.netlify/functions/getHousePoints');
         if (!response.ok) throw new Error('Failed to fetch house points');
         const data = await response.json();
         
-        container.innerHTML = ''; // Clear loading
+        container.innerHTML = ''; 
         
-        // Find max score for proportional width
-        const maxScore = Math.max(...data.map(d => parseInt(d.Current_Score) || 0), 100);
+        const maxScore = Math.max(...data.leaderboard.map(d => parseInt(d.Current_Score) || 0), 100);
         let latestUpdate = new Date(0);
 
-        data.forEach(item => {
+        data.leaderboard.forEach(item => {
             const score = parseInt(item.Current_Score) || 0;
             const percentage = (score / maxScore) * 100;
             const houseVar = `var(--house-${item.House_Name.toLowerCase()})`;
@@ -221,13 +225,26 @@ async function fetchHousePoints() {
             `;
             container.appendChild(row);
 
-            // Animate bar
             setTimeout(() => {
                 row.querySelector('.house-bar').style.width = `${percentage}%`;
             }, 100);
         });
 
         lastUpdated.textContent = `Last updated: ${latestUpdate.toLocaleString()}`;
+
+        if (historyTable && data.history) {
+            historyTable.innerHTML = '';
+            data.history.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${new Date(item.Date).toLocaleDateString()}</td>
+                    <td>${item.House}</td>
+                    <td style="color: ${item.Points >= 0 ? '#4ade80' : '#f87171'}">${item.Points > 0 ? '+' : ''}${item.Points}</td>
+                    <td>${item.Reason}</td>
+                `;
+                historyTable.appendChild(tr);
+            });
+        }
 
     } catch (error) {
         console.error(error);
@@ -298,4 +315,246 @@ function fileToBase64(file) {
         reader.onload = () => resolve(reader.result);
         reader.onerror = error => reject(error);
     });
+}
+
+// --- Calendar Logic ---
+async function fetchCalendarEvents() {
+    const grid = document.getElementById('calendar-grid');
+    if (!grid) return;
+
+    try {
+        const response = await fetch('/.netlify/functions/getCalendarEvents');
+        if (!response.ok) throw new Error('Failed to fetch calendar');
+        const events = await response.json();
+
+        // Render basic 7 day view for upcoming week
+        grid.innerHTML = '';
+        
+        const today = new Date();
+        // Create headers
+        for(let i=0; i<7; i++) {
+            const d = new Date(today);
+            d.setDate(today.getDate() + i);
+            const header = document.createElement('div');
+            header.className = 'calendar-cell header';
+            header.textContent = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            grid.appendChild(header);
+        }
+
+        // Create cells
+        const cells = [];
+        for(let i=0; i<7; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'calendar-cell';
+            grid.appendChild(cell);
+            cells.push(cell);
+        }
+
+        events.forEach(event => {
+            const eventDate = new Date(event.Date);
+            const diffTime = eventDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            
+            if (diffDays >= 0 && diffDays < 7) {
+                const eventDiv = document.createElement('div');
+                eventDiv.className = `calendar-event event-${event.Type}`;
+                eventDiv.textContent = event.Name;
+                eventDiv.title = `ID: ${event.ID}`;
+                cells[diffDays].appendChild(eventDiv);
+            }
+        });
+
+    } catch(err) {
+        grid.innerHTML = '<p class="status-message error" style="display:block">Failed to load calendar.</p>';
+    }
+}
+
+// --- Admin Authentication & Dashboard ---
+function initAdminAuth() {
+    const loginBtn = document.getElementById('admin-login-btn');
+    const logoutBtn = document.getElementById('admin-logout-btn');
+    const modal = document.getElementById('login-modal');
+    const closeBtn = document.getElementById('close-modal-btn');
+    const loginForm = document.getElementById('login-form');
+    
+    // Forms
+    document.getElementById('admin-announcement-form')?.addEventListener('submit', handleAdminAnnouncement);
+    document.getElementById('admin-calendar-form')?.addEventListener('submit', handleAdminCalendar);
+    document.getElementById('admin-house-form')?.addEventListener('submit', handleAdminHousePoints);
+    document.getElementById('refresh-submissions-btn')?.addEventListener('click', fetchAdminSubmissions);
+
+    const token = localStorage.getItem('adminToken');
+    if (token) {
+        showAdminUI();
+    }
+
+    loginBtn?.addEventListener('click', () => {
+        if (localStorage.getItem('adminToken')) return;
+        modal.classList.add('active');
+    });
+
+    closeBtn?.addEventListener('click', () => modal.classList.remove('active'));
+
+    logoutBtn?.addEventListener('click', () => {
+        localStorage.removeItem('adminToken');
+        location.reload();
+    });
+
+    loginForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const pwd = document.getElementById('login-password').value;
+        const status = document.getElementById('login-status');
+        
+        try {
+            const response = await fetch('/.netlify/functions/adminAuth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: pwd })
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                localStorage.setItem('adminToken', data.token);
+                modal.classList.remove('active');
+                showAdminUI();
+            } else {
+                status.textContent = data.error || 'Invalid password';
+                status.className = 'status-message error';
+            }
+        } catch (err) {
+            status.textContent = 'Server error';
+            status.className = 'status-message error';
+        }
+    });
+}
+
+function showAdminUI() {
+    document.getElementById('admin-dashboard-nav').style.display = 'block';
+    document.getElementById('admin-login-btn').parentElement.style.display = 'none';
+    fetchAdminSubmissions();
+}
+
+async function adminApiCall(endpoint, method, body) {
+    const token = localStorage.getItem('adminToken');
+    const options = {
+        method,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+    };
+    if (body) options.body = JSON.stringify(body);
+    
+    const response = await fetch(`/.netlify/functions/${endpoint}`, options);
+    if (response.status === 401) {
+        localStorage.removeItem('adminToken');
+        location.reload();
+    }
+    return response;
+}
+
+async function handleAdminAnnouncement(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    btn.disabled = true;
+    const status = document.getElementById('admin-ann-status');
+    
+    try {
+        const body = {
+            title: document.getElementById('admin-ann-title').value,
+            content: document.getElementById('admin-ann-content').value,
+            priority: document.getElementById('admin-ann-priority').value,
+            eventId: document.getElementById('admin-ann-event-id').value,
+            url: document.getElementById('admin-ann-url').value
+        };
+        const response = await adminApiCall('addAnnouncement', 'POST', body);
+        if(!response.ok) throw new Error('Failed');
+        status.textContent = 'Posted!';
+        status.className = 'status-message success';
+        e.target.reset();
+        fetchAnnouncements();
+    } catch(err) {
+        status.textContent = 'Error posting.';
+        status.className = 'status-message error';
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function handleAdminCalendar(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    btn.disabled = true;
+    const status = document.getElementById('admin-cal-status');
+    
+    try {
+        const body = {
+            date: document.getElementById('admin-cal-date').value,
+            name: document.getElementById('admin-cal-name').value,
+            type: document.getElementById('admin-cal-type').value
+        };
+        const response = await adminApiCall('addCalendarEvent', 'POST', body);
+        if(!response.ok) throw new Error('Failed');
+        status.textContent = 'Event Added!';
+        status.className = 'status-message success';
+        e.target.reset();
+        fetchCalendarEvents();
+    } catch(err) {
+        status.textContent = 'Error adding event.';
+        status.className = 'status-message error';
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function handleAdminHousePoints(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    btn.disabled = true;
+    const status = document.getElementById('admin-house-status');
+    
+    try {
+        const body = {
+            house: document.getElementById('admin-house-name').value,
+            points: parseInt(document.getElementById('admin-house-points').value),
+            reason: document.getElementById('admin-house-reason').value
+        };
+        const response = await adminApiCall('addHousePoints', 'POST', body);
+        if(!response.ok) throw new Error('Failed');
+        status.textContent = 'Points Updated!';
+        status.className = 'status-message success';
+        e.target.reset();
+        fetchHousePoints();
+    } catch(err) {
+        status.textContent = 'Error updating points.';
+        status.className = 'status-message error';
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function fetchAdminSubmissions() {
+    const list = document.getElementById('admin-submissions-list');
+    if (!list) return;
+    
+    try {
+        list.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
+        const response = await adminApiCall('getSubmissions', 'GET');
+        const data = await response.json();
+        
+        list.innerHTML = '';
+        data.forEach(sub => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${new Date(sub.Date).toLocaleDateString()}</td>
+                <td>Grade ${sub.Grade}</td>
+                <td>${sub.Subject}</td>
+                <td>${sub.Type}</td>
+                <td><a href="https://drive.google.com/file/d/${sub.FileID}/view" target="_blank" class="attachment-link">View File</a></td>
+            `;
+            list.appendChild(tr);
+        });
+    } catch (err) {
+        list.innerHTML = '<tr><td colspan="5" style="color:red;">Error loading submissions.</td></tr>';
+    }
 }

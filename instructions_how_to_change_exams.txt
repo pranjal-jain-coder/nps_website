@@ -1,0 +1,10 @@
+How to update Grade 12 exams:
+
+1. Open the file `main.js` in your text editor.
+2. Find the `gradeData` object at the top of the file (around line 15).
+3. Look for the line starting with `'12':`.
+4. Inside the `exams: [...]` array for '12', update the list of strings to match the new exams.
+   Example:
+   Current: exams: ['UT 1', 'UT 2', 'Half-Yearly', 'UT 3', 'UT 4', 'Annual-Exam']
+   New: exams: ['Pre-Board 1', 'Pre-Board 2', 'Board Exam']
+5. Save the file and deploy the changes to Netlify via Git.
