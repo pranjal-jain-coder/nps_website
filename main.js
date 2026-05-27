@@ -52,13 +52,15 @@ function initNavigation() {
 
     navBtns.forEach(btn => {
         btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-target');
+            if (!targetId) return;
+
             // Remove active class from all
             navBtns.forEach(b => b.classList.remove('active'));
             tabContents.forEach(c => c.classList.remove('active'));
 
             // Add active class to clicked
             btn.classList.add('active');
-            const targetId = btn.getAttribute('data-target');
             document.getElementById(targetId).classList.add('active');
             
             // Refresh data based on tab

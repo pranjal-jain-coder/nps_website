@@ -477,10 +477,22 @@ body {
 }
 .modal.active { display: flex; }
 .modal-content {
+    position: relative;
     width: 100%;
     max-width: 400px;
 }
 .modal-content h2 { margin-bottom: 24px; }
+.modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+}
+.modal-close:hover { color: var(--text-primary); }
 
 /* Admin Dashboard Styles */
 .admin-grid {
