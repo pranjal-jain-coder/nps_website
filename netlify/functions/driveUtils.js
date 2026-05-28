@@ -54,10 +54,16 @@ function bufferToStream(buffer) {
 }
 
 function googleErrorMessage(error, fallback) {
-    return error?.response?.data?.error?.message
+    const message = error?.response?.data?.error?.message
         || error?.errors?.[0]?.message
         || error?.message
         || fallback;
+
+    if (/invalid_grant|invalid_client|unauthorized_client/i.test(message)) {
+        return `Google OAuth rejected the saved credentials: ${message}. Regenerate the refresh token with Drive and Sheets scopes, then update the Netlify OAuth env vars.`;
+    }
+
+    return message;
 }
 
 module.exports = {
