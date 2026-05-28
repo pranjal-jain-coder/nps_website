@@ -706,15 +706,21 @@ async function fetchHousePoints() {
 
         const historyRows = data.history.length === 0
             ? `<tr><td colspan="${HOUSES.length+2}" style="text-align:center;padding:2rem;color:var(--text-secondary);">No history yet.</td></tr>`
-            : data.history.map(row => `
+            : data.history.map(row => {
+                const pointsByHouse = row.PointsByHouse || {};
+                if (!row.PointsByHouse && row.House) pointsByHouse[row.House] = row.Points || 0;
+                return `
                 <tr>
                     <td>${new Date(row.Date).toLocaleDateString()}</td>
                     <td>${row.Reason}</td>
-                    ${HOUSES.map(h => h === row.House
-                        ? `<td class="${row.Points >= 0 ? 'pts-pos' : 'pts-neg'}">${row.Points > 0 ? '+' : ''}${row.Points}</td>`
-                        : '<td class="pts-empty">—</td>'
-                    ).join('')}
-                </tr>`).join('');
+                    ${HOUSES.map(h => {
+                        const points = pointsByHouse[h] || 0;
+                        return points === 0
+                            ? '<td class="pts-empty">—</td>'
+                            : `<td class="${points >= 0 ? 'pts-pos' : 'pts-neg'}">${points > 0 ? '+' : ''}${points}</td>`;
+                    }).join('')}
+                </tr>`;
+            }).join('');
 
         const adminForm = isAdmin() ? `
             <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border-color);">
@@ -767,23 +773,23 @@ async function handleAdminHousePoints(e) {
     const status = document.getElementById('admin-house-status');
     const reason = document.getElementById('admin-house-reason').value.trim();
 
-    const entries = [];
+    const pointsByHouse = {};
     for (const h of HOUSES) {
         const raw = (document.getElementById(`admin-house-${h.toLowerCase()}`)?.value ?? '').trim();
         if (raw === '') continue;
         const points = parseInt(raw, 10);
         if (!Number.isFinite(points) || points === 0) continue;
-        entries.push({ house: h, points });
+        pointsByHouse[h] = points;
     }
 
-    if (entries.length === 0) {
+    if (Object.keys(pointsByHouse).length === 0) {
         status.textContent = 'Enter a point change for at least one house.';
         status.className = 'status-message error';
         btn.disabled = false;
         return;
     }
     try {
-        await Promise.all(entries.map(en => adminApiCall('addHousePoints', 'POST', { house: en.house, points: en.points, reason })));
+        await adminApiCall('addHousePoints', 'POST', { pointsByHouse, reason });
         fetchHousePoints();
     } catch {
         status.textContent = 'Error updating points.';

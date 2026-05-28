@@ -9,18 +9,41 @@ exports.handler = async (event, context) => {
 
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'House Points System!A2:D', 
+            range: 'House Points System!A2:F',
         });
 
         const rows = response.data.values || [];
-        
-        // Ledger format: Date, House, Points Changed, Reason
-        const history = rows.map(row => ({
-            Date: row[0] || '',
-            House: row[1] || '',
-            Points: parseInt(row[2]) || 0,
-            Reason: row[3] || ''
-        }));
+        const houses = ['Challengers', 'Explorers', 'Pioneers', 'Voyagers'];
+        const emptyPoints = () => Object.fromEntries(houses.map(house => [house, 0]));
+
+        const history = rows.map(row => {
+            const oldFormatHouse = row[1] || '';
+            const isOldFormat = houses.includes(oldFormatHouse);
+            const PointsByHouse = emptyPoints();
+
+            if (isOldFormat) {
+                PointsByHouse[oldFormatHouse] = Number.parseInt(row[2], 10) || 0;
+                return {
+                    Date: row[0] || '',
+                    House: oldFormatHouse,
+                    Points: PointsByHouse[oldFormatHouse],
+                    Reason: row[3] || '',
+                    PointsByHouse
+                };
+            }
+
+            houses.forEach((house, index) => {
+                PointsByHouse[house] = Number.parseInt(row[index + 2], 10) || 0;
+            });
+
+            return {
+                Date: row[0] || '',
+                House: '',
+                Points: 0,
+                Reason: row[1] || '',
+                PointsByHouse
+            };
+        });
 
         // Aggregate scores
         const scores = {
@@ -31,9 +54,9 @@ exports.handler = async (event, context) => {
         };
 
         history.forEach(item => {
-            if (scores[item.House] !== undefined) {
-                scores[item.House] += item.Points;
-            }
+            houses.forEach(house => {
+                scores[house] += item.PointsByHouse[house] || 0;
+            });
         });
 
         // Format for frontend
