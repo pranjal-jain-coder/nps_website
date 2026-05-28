@@ -696,7 +696,6 @@ body.is-admin .admin-panel.ann-admin-grid { display: grid; }
 
 /* Announcements admin grid */
 .ann-admin-grid {
-    display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
 }
