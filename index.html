@@ -17,8 +17,13 @@
                 <div class="logo">NPS</div>
                 <h2>Student Portal</h2>
                 <div id="admin-mode-badge" class="admin-mode-badge">Admin Mode</div>
+                <button class="menu-toggle" id="mobile-menu-toggle" type="button" aria-label="Open navigation menu" aria-controls="nav-menu" aria-expanded="false">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </div>
-            <ul class="nav-links">
+            <ul class="nav-links" id="nav-menu">
                 <li><button class="nav-btn active" data-target="academic-hub">Past Papers</button></li>
                 <li><button class="nav-btn" data-target="announcements">Announcements</button></li>
                 <li><button class="nav-btn" data-target="fixit-portal">Suggestions</button></li>
@@ -28,6 +33,7 @@
                     <button class="nav-btn nav-btn-logout" id="admin-logout-btn">Logout</button>
                 </li>
             </ul>
+            <p class="made-by">Made by Pranjal Jain</p>
         </nav>
 
         <!-- Main Content -->
@@ -56,7 +62,10 @@
                 </div>
 
                 <div class="upload-section glass-panel">
-                    <h2>Submission Drop-Box</h2>
+                    <div class="upload-heading">
+                        <h2>Add New Material</h2>
+                        <p>Upload clear, complete PDFs only. Include the correct year, grade, subject, and exam type so the file can be reviewed and placed in the right folder.</p>
+                    </div>
                     <form id="upload-form">
                         <div class="form-group">
                             <label for="upload-year">Academic Year</label>

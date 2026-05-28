@@ -5,6 +5,7 @@ const MAX_UPLOAD_BYTES = Math.floor(4.5 * 1024 * 1024);
 
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
+    initMobileMenu();
 
     fetchAnnouncements();
     fetchSuggestions();
@@ -62,6 +63,33 @@ const ANN_TYPE_COLORS = {
     Sports:       '#10b981',
 };
 
+function parseDate(value) {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+
+    const str = String(value).trim();
+    const dateOnly = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnly) {
+        return new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]));
+    }
+
+    const displayDate = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (displayDate) {
+        return new Date(Number(displayDate[3]), Number(displayDate[2]) - 1, Number(displayDate[1]));
+    }
+
+    const date = new Date(str);
+    return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatDateDDMMYYYY(value) {
+    const date = parseDate(value);
+    if (!date) return '';
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${day}/${month}/${date.getFullYear()}`;
+}
+
 function handleGradeChange(e) {
     const grade = e.target.value;
     const subjectSelect = document.getElementById('upload-subject');
@@ -84,6 +112,40 @@ function isAdmin() { return !!localStorage.getItem('adminToken'); }
 
 function openModal(id) { document.getElementById(id).classList.add('active'); }
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function setMobileMenu(open) {
+    const sidebar = document.querySelector('.sidebar');
+    const toggle = document.getElementById('mobile-menu-toggle');
+    if (!sidebar || !toggle) return;
+
+    sidebar.classList.toggle('menu-open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
+}
+
+function initMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const toggle = document.getElementById('mobile-menu-toggle');
+    const menu = document.getElementById('nav-menu');
+    if (!sidebar || !toggle || !menu) return;
+
+    toggle.addEventListener('click', e => {
+        e.stopPropagation();
+        setMobileMenu(!sidebar.classList.contains('menu-open'));
+    });
+
+    menu.addEventListener('click', e => {
+        if (e.target.closest('button')) setMobileMenu(false);
+    });
+
+    document.addEventListener('click', e => {
+        if (!sidebar.contains(e.target)) setMobileMenu(false);
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') setMobileMenu(false);
+    });
+}
 
 // --- Navigation ---
 function initNavigation() {
@@ -122,6 +184,7 @@ async function fetchAnnouncements() {
             const card = document.createElement('div');
             card.className = 'announcement-card';
             const typeColor = ANN_TYPE_COLORS[item.Type] || ANN_TYPE_COLORS.General;
+            const typeLabel = escHtml(item.Type || 'General');
             card.style.borderLeft = `4px solid ${typeColor}`;
 
             let eventsHtml = '';
@@ -129,13 +192,13 @@ async function fetchAnnouncements() {
                 const linked = calendarEvents.filter(e => item.Event_IDs.includes(e.ID));
                 if (linked.length > 0) {
                     eventsHtml = `<div class="linked-events">${linked.map(e =>
-                        `<span class="event-chip event-chip-${e.Type.toLowerCase()}">${e.Name} · ${new Date(e.Date).toLocaleDateString()}</span>`
+                        `<span class="event-chip event-chip-${String(e.Type || '').toLowerCase()}">${escHtml(e.Name)} · ${formatDateDDMMYYYY(e.Date)}</span>`
                     ).join('')}</div>`;
                 }
             }
 
             let attachmentHtml = item.Attachment_URL
-                ? `<a href="${item.Attachment_URL}" target="_blank" class="attachment-link">View Attachment</a>` : '';
+                ? `<a href="${escHtml(item.Attachment_URL)}" target="_blank" class="attachment-link">View Attachment</a>` : '';
 
             const adminControls = isAdmin() && item.ID ? `
                 <div class="ann-admin-controls">
@@ -145,11 +208,11 @@ async function fetchAnnouncements() {
 
             card.innerHTML = `
                 <div class="announcement-meta">
-                    <span class="date">${item.Date}</span>
-                    <span class="ann-type-badge" style="background:${typeColor}20;color:${typeColor};border:1px solid ${typeColor}40">${item.Type}</span>
+                    <span class="date">${formatDateDDMMYYYY(item.Date)}</span>
+                    <span class="ann-type-badge" style="background:${typeColor}20;color:${typeColor};border:1px solid ${typeColor}40">${typeLabel}</span>
                 </div>
-                <h3>${item.Title}</h3>
-                <p>${item.Content}</p>
+                <h3>${escHtml(item.Title)}</h3>
+                <p>${escHtml(item.Content)}</p>
                 ${eventsHtml}
                 ${attachmentHtml}
                 ${adminControls}
@@ -221,12 +284,12 @@ function openAnnouncementEdit(item) {
         : calendarEvents.map(e => `
             <label class="event-picker-item">
                 <input type="checkbox" name="edit-event-ids" value="${e.ID}" ${checkedIds.includes(e.ID) ? 'checked' : ''}>
-                <span class="event-chip event-chip-${e.Type.toLowerCase()}">${e.Name}</span>
-                <span class="event-picker-date">${new Date(e.Date).toLocaleDateString()}</span>
+                <span class="event-chip event-chip-${String(e.Type || '').toLowerCase()}">${escHtml(e.Name)}</span>
+                <span class="event-picker-date">${formatDateDDMMYYYY(e.Date)}</span>
             </label>`).join('');
 
     const currentAttachment = item.Attachment_URL
-        ? `<p style="font-size:12px;color:var(--text-secondary);margin-top:6px;">Current: <a href="${item.Attachment_URL}" target="_blank" style="color:var(--accent-color);">View file</a></p>` : '';
+        ? `<p style="font-size:12px;color:var(--text-secondary);margin-top:6px;">Current: <a href="${escHtml(item.Attachment_URL)}" target="_blank" style="color:var(--accent-color);">View file</a></p>` : '';
 
     document.getElementById('edit-modal-body').innerHTML = `
         <h2 style="margin-bottom:1.5rem;">Edit Announcement</h2>
@@ -380,7 +443,8 @@ function renderCalendarGrid() {
     }
 
     calendarEvents.forEach(event => {
-        const d = new Date(event.Date);
+        const d = parseDate(event.Date);
+        if (!d) return;
         if (d.getFullYear() === year && d.getMonth() === month) {
             const day = d.getDate();
             if (dayCells[day]) {
@@ -411,8 +475,8 @@ function renderEventPicker() {
         label.className = 'event-picker-item';
         label.innerHTML = `
             <input type="checkbox" name="event-ids" value="${event.ID}">
-            <span class="event-chip event-chip-${event.Type.toLowerCase()}">${event.Name}</span>
-            <span class="event-picker-date">${new Date(event.Date).toLocaleDateString()}</span>
+            <span class="event-chip event-chip-${String(event.Type || '').toLowerCase()}">${escHtml(event.Name)}</span>
+            <span class="event-picker-date">${formatDateDDMMYYYY(event.Date)}</span>
         `;
         picker.appendChild(label);
     });
@@ -525,10 +589,10 @@ async function fetchSuggestions() {
             card.className = 'suggestion-card';
             card.style.cssText = `background:${colors.bg};border-left:3px solid ${colors.border};cursor:pointer;`;
             card.innerHTML = `
-                <div class="sugg-card-title">${item.Title}</div>
+                <div class="sugg-card-title">${escHtml(item.Title)}</div>
                 <div class="sugg-card-meta">
-                    <span class="cat-badge" style="color:${colors.text};background:rgba(255,255,255,0.07)">${item.Category}</span>
-                    <span style="color:var(--text-secondary);font-size:11px;">${new Date(item.Timestamp).toLocaleDateString()}</span>
+                    <span class="cat-badge" style="color:${colors.text};background:rgba(255,255,255,0.07)">${escHtml(item.Category)}</span>
+                    <span style="color:var(--text-secondary);font-size:11px;">${formatDateDDMMYYYY(item.Timestamp)}</span>
                 </div>
             `;
             card.addEventListener('click', () => openSuggestionDetail(item));
@@ -577,12 +641,12 @@ function openSuggestionDetail(item) {
 
     document.getElementById('suggestion-modal-body').innerHTML = `
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;">
-            <span class="cat-badge" style="color:${colors.text};background:${colors.bg};border:1px solid ${colors.border};font-size:13px;padding:4px 12px;">${item.Category}</span>
-            <span style="color:var(--text-secondary);font-size:13px;">${new Date(item.Timestamp).toLocaleDateString()}</span>
-            <span style="margin-left:auto;font-size:12px;color:var(--text-secondary);background:rgba(255,255,255,0.07);padding:3px 10px;border-radius:12px;">${item.Status}</span>
+            <span class="cat-badge" style="color:${colors.text};background:${colors.bg};border:1px solid ${colors.border};font-size:13px;padding:4px 12px;">${escHtml(item.Category)}</span>
+            <span style="color:var(--text-secondary);font-size:13px;">${formatDateDDMMYYYY(item.Timestamp)}</span>
+            <span style="margin-left:auto;font-size:12px;color:var(--text-secondary);background:rgba(255,255,255,0.07);padding:3px 10px;border-radius:12px;">${escHtml(item.Status)}</span>
         </div>
-        <h2 style="margin-bottom:1rem;font-size:22px;">${item.Title}</h2>
-        <p style="color:var(--text-secondary);line-height:1.7;">${item.Description}</p>
+        <h2 style="margin-bottom:1rem;font-size:22px;">${escHtml(item.Title)}</h2>
+        <p style="color:var(--text-secondary);line-height:1.7;">${escHtml(item.Description)}</p>
         ${adminSection}
     `;
 
@@ -711,8 +775,8 @@ async function fetchHousePoints() {
                 if (!row.PointsByHouse && row.House) pointsByHouse[row.House] = row.Points || 0;
                 return `
                 <tr>
-                    <td>${new Date(row.Date).toLocaleDateString()}</td>
-                    <td>${row.Reason}</td>
+                    <td>${formatDateDDMMYYYY(row.Date)}</td>
+                    <td>${escHtml(row.Reason)}</td>
                     ${HOUSES.map(h => {
                         const points = pointsByHouse[h] || 0;
                         return points === 0
@@ -929,7 +993,7 @@ async function fetchAdminSubmissions() {
             const statusId = `approve-status-${sub.FileID}`;
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${new Date(sub.Date).toLocaleDateString()}</td>
+                <td>${formatDateDDMMYYYY(sub.Date)}</td>
                 <td>Grade ${escHtml(sub.Grade)}</td>
                 <td>${escHtml(sub.Subject)}</td>
                 <td>${escHtml(sub.Type)}</td>

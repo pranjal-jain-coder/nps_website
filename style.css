@@ -46,7 +46,7 @@ body {
 /* Layout */
 .app-container {
     display: flex;
-    height: 100vh;
+    min-height: 100vh;
 }
 
 .sidebar {
@@ -56,6 +56,9 @@ body {
     padding: 32px 0;
     display: flex;
     flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
 }
 
 .logo-container {
@@ -95,6 +98,41 @@ body.is-admin .admin-mode-badge { display: block; }
     margin-top: 4px;
 }
 
+.menu-toggle {
+    display: none;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 5px;
+    margin-left: auto;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.menu-toggle span {
+    width: 20px;
+    height: 2px;
+    background: var(--text-primary);
+    border-radius: 999px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.sidebar.menu-open .menu-toggle span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.sidebar.menu-open .menu-toggle span:nth-child(2) {
+    opacity: 0;
+}
+
+.sidebar.menu-open .menu-toggle span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
 .nav-links {
     list-style: none;
     display: flex;
@@ -102,6 +140,13 @@ body.is-admin .admin-mode-badge { display: block; }
     gap: 8px;
     padding: 0 16px;
     flex: 1;
+}
+
+.made-by {
+    padding: 0 32px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.4;
 }
 
 /* Auth button slot at the bottom of nav */
@@ -147,6 +192,22 @@ body.is-admin #admin-login-btn { display: none; }
     flex: 1;
     overflow-y: auto;
     padding: 48px;
+    min-width: 0;
+}
+
+.upload-heading {
+    margin-bottom: 24px;
+}
+
+.upload-heading h2 {
+    margin-bottom: 8px;
+}
+
+.upload-heading p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 720px;
 }
 
 .tab-content {
@@ -235,6 +296,7 @@ body.is-admin #admin-login-btn { display: none; }
     font-family: var(--font-main);
     font-size: 15px;
     transition: border-color 0.3s;
+    min-width: 0;
 }
 
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
@@ -551,6 +613,7 @@ body.is-admin #admin-login-btn { display: none; }
     width: 100%;
     border-collapse: collapse;
     text-align: left;
+    min-width: 720px;
 }
 .admin-table th, .admin-table td {
     padding: 16px;
@@ -651,6 +714,7 @@ body.is-admin #admin-login-btn { display: none; }
     margin-bottom: 4px;
     cursor: pointer;
     transition: background 0.3s;
+    overflow-wrap: anywhere;
 }
 .calendar-event:hover {
     background: rgba(59, 130, 246, 0.4);
@@ -797,6 +861,7 @@ body.is-admin .admin-panel.ann-admin-grid { display: grid; }
     border-radius: 12px;
     padding: 20px;
     text-align: center;
+    min-width: 0;
 }
 .house-total-name  { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
 .house-total-score { font-size: 36px; font-weight: 700; line-height: 1; }
@@ -806,6 +871,7 @@ body.is-admin .admin-panel.ann-admin-grid { display: grid; }
     width: 100%;
     border-collapse: collapse;
     font-size: 14px;
+    min-width: 680px;
 }
 .house-ledger-table th,
 .house-ledger-table td {
@@ -829,7 +895,7 @@ body.is-admin .admin-panel.ann-admin-grid { display: grid; }
 /* House admin entry grid */
 .house-entry-grid {
     display: grid;
-    grid-template-columns: 2fr repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
     align-items: end;
 }
@@ -848,4 +914,253 @@ body.is-admin .admin-panel.ann-admin-grid { display: grid; }
     margin-top: 12px;
     padding-top: 12px;
     border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 900px) {
+    body {
+        background-image: radial-gradient(circle at 20% 10%, rgba(59, 130, 246, 0.14), transparent 30%);
+    }
+
+    .app-container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        max-width: 100vw;
+        height: auto;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        padding: 12px 16px 10px;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0;
+        margin-bottom: 12px;
+        min-width: 0;
+    }
+
+    .logo {
+        font-size: 24px;
+    }
+
+    .logo-container h2 {
+        margin-top: 0;
+        font-size: 12px;
+    }
+
+    .admin-mode-badge {
+        margin-top: 0;
+        margin-left: 0;
+        white-space: nowrap;
+    }
+
+    .menu-toggle {
+        display: flex;
+    }
+
+    .nav-links {
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+        padding: 0;
+        flex: initial;
+        overflow-x: visible;
+    }
+
+    .sidebar.menu-open .nav-links {
+        display: flex;
+        margin-top: 8px;
+    }
+
+    .nav-auth-li {
+        margin-top: 0;
+        padding-top: 0;
+    }
+
+    .nav-btn {
+        text-align: left;
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: 15px;
+        line-height: 1.2;
+        min-height: 44px;
+    }
+
+    .made-by {
+        display: none;
+        padding: 10px 0 0;
+        text-align: left;
+        font-size: 11px;
+    }
+
+    .sidebar.menu-open .made-by {
+        display: block;
+    }
+
+    .content-area {
+        width: 100%;
+        max-width: 100vw;
+        overflow-y: visible;
+        padding: 24px 16px 40px;
+    }
+
+    .section-header {
+        margin-bottom: 24px;
+    }
+
+    .section-header h1 {
+        font-size: 28px;
+    }
+
+    .section-header p {
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+    .glass-panel,
+    .announcement-card {
+        border-radius: 12px;
+        padding: 18px;
+    }
+
+    .drive-links-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 28px;
+    }
+
+    .drive-card {
+        padding: 20px 14px;
+        border-radius: 12px;
+    }
+
+    .drive-card h3 {
+        font-size: 20px;
+    }
+
+    .calendar-grid {
+        gap: 4px;
+    }
+
+    .calendar-cell {
+        min-height: 72px;
+        padding: 8px 6px;
+    }
+
+    .calendar-cell.header {
+        font-size: 11px;
+    }
+
+    .calendar-date {
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+
+    .calendar-event {
+        padding: 4px 5px;
+        font-size: 10px;
+        line-height: 1.2;
+    }
+
+    .event-picker-item {
+        grid-template-columns: 16px 1fr;
+    }
+
+    .event-picker-date {
+        grid-column: 2;
+    }
+
+    .announcement-meta {
+        align-items: flex-start;
+    }
+
+    .fixit-layout,
+    .status-lanes {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .status-lane {
+        min-height: auto;
+    }
+
+    .house-totals {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .house-total-card {
+        padding: 16px 10px;
+    }
+
+    .house-total-name {
+        font-size: 11px;
+    }
+
+    .house-total-score {
+        font-size: 30px;
+    }
+
+    .modal {
+        align-items: flex-start;
+        padding: 16px;
+        overflow-y: auto;
+    }
+
+    .modal-content {
+        max-width: none;
+        margin: 24px 0;
+    }
+}
+
+@media (max-width: 520px) {
+    .logo-container h2 {
+        display: none;
+    }
+
+    .drive-links-grid,
+    .house-totals,
+    .house-entry-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .calendar-header h2 {
+        font-size: 17px;
+    }
+
+    .calendar-grid {
+        grid-template-columns: repeat(7, minmax(34px, 1fr));
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .calendar-cell {
+        min-width: 34px;
+        min-height: 62px;
+    }
+
+    .calendar-event {
+        border-left-width: 2px;
+    }
+
+    .sugg-card-meta {
+        align-items: flex-start;
+        flex-direction: column;
+    }
 }
