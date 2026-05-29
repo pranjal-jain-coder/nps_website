@@ -2,6 +2,13 @@ const { Readable } = require('stream');
 
 const MAX_UPLOAD_BYTES = Math.floor(4.5 * 1024 * 1024);
 
+const GRADE_FOLDER_IDS = {
+    '9':  '1eFZIou32L2y8Okk3sd5FhCdIq6Si7bWA',
+    '10': '1wbizmxcrPh9XjFfs8ajKzlzkO6Dvk3iN',
+    '11': '1PraI0QrNMkeYfizWR0mMTh_R-HXMh_qu',
+    '12': '1yWlsFIxqP_Z3HbToKUmZCfYlvZoRlgg-'
+};
+
 function normalizeDriveFolderId(value) {
     if (!value) return '';
     const raw = String(value).trim();
@@ -68,6 +75,7 @@ function googleErrorMessage(error, fallback) {
 
 module.exports = {
     MAX_UPLOAD_BYTES,
+    GRADE_FOLDER_IDS,
     normalizeDriveFolderId,
     sanitizeFilePart,
     sanitizeDriveFileName,

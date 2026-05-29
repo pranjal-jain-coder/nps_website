@@ -23,7 +23,7 @@ exports.handler = async (event, context) => {
 
         const id = crypto.randomUUID();
         const timestamp = new Date().toISOString();
-        const status = 'Submitted';
+        const status = 'Pending Approval';
 
         // Schema: ID(A), Timestamp(B), Category(C), Title(D), Description(E), Status(F)
         const row = [id, timestamp, category, sanitizedTitle, sanitizedDescription, status];

@@ -2,23 +2,17 @@ const { google } = require('googleapis');
 const { getAuthClient } = require('./googleClient');
 const { verifyAdmin } = require('./authMiddleware');
 const {
+    GRADE_FOLDER_IDS,
     buildPaperFileName,
     googleErrorMessage
 } = require('./driveUtils');
-
-const GRADE_FOLDER_IDS = {
-    '9': '1eFZIou32L2y8Okk3sd5FhCdIq6Si7bWA',
-    '10': '1wbizmxcrPh9XjFfs8ajKzlzkO6Dvk3iN',
-    '11': '1PraI0QrNMkeYfizWR0mMTh_R-HXMh_qu',
-    '12': '1yWlsFIxqP_Z3HbToKUmZCfYlvZoRlgg-'
-};
 
 exports.handler = async (event, context) => {
     if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
     if (!verifyAdmin(event)) return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };
 
     try {
-        const { fileId, suffix } = JSON.parse(event.body);
+        const { fileId, suffix, forceOverwrite } = JSON.parse(event.body);
         if (!fileId) return { statusCode: 400, body: JSON.stringify({ error: 'Missing fileId' }) };
 
         const auth = getAuthClient();
@@ -50,6 +44,46 @@ exports.handler = async (event, context) => {
         }
 
         const finalName = buildPaperFileName({ year, grade, subject, type, suffix: finalSuffix });
+
+        // --- Conflict detection: check if a file with the same name already exists in the destination ---
+        const escapedName = finalName.replace(/'/g, "\\'");
+        const searchResponse = await drive.files.list({
+            q: `name = '${escapedName}' and '${destinationFolderId}' in parents and trashed = false`,
+            fields: 'files(id,name)',
+            supportsAllDrives: true,
+            includeItemsFromAllDrives: true,
+            corpora: 'allDrives'
+        });
+        const conflictingFiles = searchResponse.data.files || [];
+
+        if (conflictingFiles.length > 0) {
+            if (!forceOverwrite) {
+                // Warn the admin and return conflict details
+                return {
+                    statusCode: 409,
+                    body: JSON.stringify({
+                        conflict: true,
+                        existingFileName: finalName,
+                        existingFileIds: conflictingFiles.map(f => f.id),
+                        grade: String(grade || '').trim(),
+                        message: `A file named "${finalName}" already exists in the Grade ${grade} folder.`
+                    })
+                };
+            }
+
+            // forceOverwrite: trash all conflicting files before moving the new one
+            await Promise.all(
+                conflictingFiles.map(f =>
+                    drive.files.update({
+                        fileId: f.id,
+                        requestBody: { trashed: true },
+                        supportsAllDrives: true
+                    })
+                )
+            );
+        }
+        // --- End conflict detection ---
+
         const fileResponse = await drive.files.get({
             fileId,
             fields: 'parents',

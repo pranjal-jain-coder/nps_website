@@ -1,8 +1,10 @@
 const { google } = require('googleapis');
 const { getAuthClient } = require('./googleClient');
+const { verifyAdmin } = require('./authMiddleware');
 
 exports.handler = async (event, context) => {
     try {
+        const isAdmin = verifyAdmin(event);
         const auth = getAuthClient();
         const sheets = google.sheets({ version: 'v4', auth });
         const spreadsheetId = process.env.MASTER_SPREADSHEET_ID;
@@ -15,7 +17,7 @@ exports.handler = async (event, context) => {
 
         const rows = response.data.values || [];
 
-        const suggestions = rows.map(row => ({
+        let suggestions = rows.map(row => ({
             ID: row[0] || '',
             Timestamp: row[1] || '',
             Category: row[2] || '',
@@ -23,6 +25,10 @@ exports.handler = async (event, context) => {
             Description: row[4] || row[3] || '', // fallback: old rows had description at index 3
             Status: row[5] || row[4] || 'Submitted' // fallback for old rows
         }));
+
+        if (!isAdmin) {
+            suggestions = suggestions.filter(s => s.Status !== 'Pending Approval');
+        }
 
         // Sort by Timestamp descending
         suggestions.sort((a, b) => new Date(b.Timestamp) - new Date(a.Timestamp));

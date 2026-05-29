@@ -1,4 +1,16 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+
+function timingSafeEqual(a, b) {
+    const bufA = Buffer.from(String(a));
+    const bufB = Buffer.from(String(b));
+    if (bufA.length !== bufB.length) {
+        // Still run the comparison to avoid length-based timing leak
+        crypto.timingSafeEqual(bufA, Buffer.alloc(bufA.length));
+        return false;
+    }
+    return crypto.timingSafeEqual(bufA, bufB);
+}
 
 exports.handler = async (event, context) => {
     if (event.httpMethod !== 'POST') {
@@ -8,14 +20,17 @@ exports.handler = async (event, context) => {
     try {
         const { password } = JSON.parse(event.body);
         const correctPassword = process.env.ADMIN_PASSWORD;
+        const jwtSecret = process.env.JWT_SECRET;
 
         if (!correctPassword) {
             return { statusCode: 500, body: JSON.stringify({ error: 'Server misconfiguration: No ADMIN_PASSWORD set.' }) };
         }
+        if (!jwtSecret) {
+            return { statusCode: 500, body: JSON.stringify({ error: 'Server misconfiguration: No JWT_SECRET set.' }) };
+        }
 
-        if (password === correctPassword) {
-            // Create a token valid for 24 hours
-            const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '24h' });
+        if (timingSafeEqual(password, correctPassword)) {
+            const token = jwt.sign({ role: 'admin' }, jwtSecret, { expiresIn: '24h' });
             return {
                 statusCode: 200,
                 body: JSON.stringify({ success: true, token })

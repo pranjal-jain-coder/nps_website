@@ -65,6 +65,7 @@
                     <div class="upload-heading">
                         <h2>Add New Material</h2>
                         <p>Upload clear, complete PDFs only. Include the correct year, grade, subject, and exam type so the file can be reviewed and placed in the right folder.</p>
+                        <p style="margin-top:0.5rem;font-size:13px;color:var(--text-secondary);"><strong>Note:</strong> All submitted documents are reviewed by an admin before being made publicly available.</p>
                     </div>
                     <form id="upload-form">
                         <div class="form-group">
@@ -101,7 +102,7 @@
                             <label for="upload-file">Select PDF File (&lt;4.5MB)</label>
                             <input type="file" id="upload-file" accept="application/pdf" required>
                         </div>
-                        <button type="submit" class="primary-btn">Upload Document</button>
+                        <button type="submit" class="primary-btn">Upload Document for Review</button>
                     </form>
                     <div id="upload-status" class="status-message"></div>
                 </div>
@@ -219,12 +220,22 @@
             <section id="fixit-portal" class="tab-content">
                 <header class="section-header">
                     <h1>Anonymous Suggestions</h1>
-                    <p>Submit issues or suggestions anonymously. Track resolution status live.</p>
+                    <p>Submit issues or suggestions anonymously. Submissions are reviewed by an admin before appearing on the public board.</p>
                 </header>
 
                 <div class="fixit-layout">
                     <div class="fixit-form-container glass-panel">
                         <h2>Submit a Suggestion</h2>
+                        <div class="guidelines-box" style="background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;padding:12px 16px;margin-bottom:1.25rem;font-size:13px;color:var(--text-secondary);line-height:1.6;">
+                            <strong style="color:var(--text-primary);">Submission Guidelines</strong>
+                            <ul style="margin:6px 0 0 1rem;padding:0;">
+                                <li>Suggestions must be realistic and within the school's capabilities and resources.</li>
+                                <li>Keep it constructive — focus on improvements, not complaints about individuals.</li>
+                                <li>Be specific: vague suggestions are harder to act on.</li>
+                                <li>One idea per submission for clarity.</li>
+                                <li>Suggestions will be reviewed before being published to public board.</li>
+                            </ul>
+                        </div>
                         <form id="suggestion-form">
                             <div class="form-group">
                                 <label for="sugg-category">Category</label>
@@ -245,7 +256,7 @@
                                 <textarea id="sugg-description" required maxlength="1000" rows="4"
                                     placeholder="Detail your suggestion..."></textarea>
                             </div>
-                            <button type="submit" class="primary-btn">Submit Anonymous Suggestion</button>
+                            <button type="submit" class="primary-btn">Submit for Admin Review</button>
                         </form>
                         <div id="suggestion-status" class="status-message"></div>
                     </div>
@@ -253,6 +264,10 @@
                     <div class="fixit-board">
                         <h2>Live Status Board</h2>
                         <div class="status-lanes">
+                            <div class="status-lane admin-only-lane" id="pending-approval-lane" style="display:none;">
+                                <h3 style="color:#f59e0b;">Pending Approval</h3>
+                                <div id="lane-pending" class="lane-cards"></div>
+                            </div>
                             <div class="status-lane">
                                 <h3>Submitted</h3>
                                 <div id="lane-submitted" class="lane-cards"></div>

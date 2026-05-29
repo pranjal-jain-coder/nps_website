@@ -197,8 +197,9 @@ async function fetchAnnouncements() {
                 }
             }
 
-            let attachmentHtml = item.Attachment_URL
-                ? `<a href="${escHtml(item.Attachment_URL)}" target="_blank" class="attachment-link">View Attachment</a>` : '';
+            const attachmentUrl = String(item.Attachment_URL || '');
+            let attachmentHtml = (attachmentUrl.startsWith('https://') || attachmentUrl.startsWith('http://'))
+                ? `<a href="${escHtml(attachmentUrl)}" target="_blank" rel="noopener noreferrer" class="attachment-link">View Attachment</a>` : '';
 
             const adminControls = isAdmin() && item.ID ? `
                 <div class="ann-admin-controls">
@@ -575,12 +576,20 @@ async function deleteCalendarEventById(id) {
 // --- Suggestions ---
 async function fetchSuggestions() {
     try {
-        const res = await fetch('/.netlify/functions/getSuggestions');
+        const headers = {};
+        const token = localStorage.getItem('adminToken');
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch('/.netlify/functions/getSuggestions', { headers });
         if (!res.ok) throw new Error('Failed');
         const data = await res.json();
 
-        ['submitted', 'under-review', 'resolved'].forEach(lane => {
-            document.getElementById(`lane-${lane}`).innerHTML = '';
+        const pendingLane = document.getElementById('pending-approval-lane');
+        if (pendingLane) pendingLane.style.display = isAdmin() ? '' : 'none';
+
+        ['pending', 'submitted', 'under-review', 'resolved'].forEach(lane => {
+            const el = document.getElementById(`lane-${lane}`);
+            if (el) el.innerHTML = '';
         });
 
         data.forEach(item => {
@@ -598,6 +607,7 @@ async function fetchSuggestions() {
             card.addEventListener('click', () => openSuggestionDetail(item));
 
             let laneId = 'lane-submitted';
+            if (item.Status === 'Pending Approval') laneId = 'lane-pending';
             if (item.Status === 'Under Review' || item.Status === 'Discussing with Administration') laneId = 'lane-under-review';
             if (item.Status === 'Resolved') laneId = 'lane-resolved';
 
@@ -613,8 +623,9 @@ function openSuggestionDetail(item) {
         <div style="border-top:1px solid var(--border-color);margin-top:1.5rem;padding-top:1.5rem;">
             <h3 class="admin-subheading" style="margin-bottom:1rem;">Admin Actions</h3>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem;">
-                ${item.Status !== 'Submitted' ? `<button class="sugg-btn sugg-back" onclick="moveSuggestion('${item.ID}','${prevStatus(item.Status)}')">◀ Back to ${prevStatus(item.Status)}</button>` : ''}
-                ${item.Status !== 'Resolved' ? `<button class="sugg-btn sugg-forward" onclick="moveSuggestion('${item.ID}','${nextStatus(item.Status)}')">Move to ${nextStatus(item.Status)} ▶</button>` : ''}
+                ${item.Status !== 'Pending Approval' ? `<button class="sugg-btn sugg-back" onclick="moveSuggestion('${item.ID}','${prevStatus(item.Status)}')">◀ Back to ${prevStatus(item.Status)}</button>` : ''}
+                ${item.Status === 'Pending Approval' ? `<button class="sugg-btn sugg-forward" style="background:#15803d;" onclick="moveSuggestion('${item.ID}','Submitted')">✓ Approve to Board</button>` : ''}
+                ${item.Status !== 'Pending Approval' && item.Status !== 'Resolved' ? `<button class="sugg-btn sugg-forward" onclick="moveSuggestion('${item.ID}','${nextStatus(item.Status)}')">Move to ${nextStatus(item.Status)} ▶</button>` : ''}
                 <button class="sugg-btn sugg-delete" onclick="deleteSuggestionById('${item.ID}')">✕ Delete</button>
             </div>
             <h3 class="admin-subheading" style="margin-bottom:1rem;">Edit Suggestion</h3>
@@ -685,6 +696,7 @@ function nextStatus(s) {
 function prevStatus(s) {
     if (s === 'Resolved') return 'Under Review';
     if (s === 'Under Review' || s === 'Discussing with Administration') return 'Submitted';
+    if (s === 'Submitted') return 'Pending Approval';
     return s;
 }
 
@@ -733,7 +745,7 @@ async function handleSuggestionSubmit(e) {
             })
         });
         if (!res.ok) throw new Error('Failed');
-        statusDiv.textContent = 'Suggestion submitted anonymously!';
+        statusDiv.textContent = 'Suggestion submitted anonymously! It will appear on the board after admin review.';
         statusDiv.className = 'status-message success';
         e.target.reset();
         localStorage.setItem('lastSuggestionTime', Date.now().toString());
@@ -743,7 +755,7 @@ async function handleSuggestionSubmit(e) {
         statusDiv.className = 'status-message error';
     } finally {
         btn.disabled = false;
-        btn.textContent = 'Submit Anonymous Suggestion';
+        btn.textContent = 'Submit for Admin Review';
     }
 }
 
@@ -892,10 +904,15 @@ async function handleFileUpload(e) {
         });
         if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
-            throw new Error(errData.error || `Server error ${res.status}`);
+            const isDuplicate = res.status === 409;
+            statusDiv.textContent = errData.error || `Server error ${res.status}`;
+            statusDiv.className = isDuplicate ? 'status-message warning' : 'status-message error';
+            statusDiv.style.display = 'block';
+            return;
         }
         statusDiv.textContent = 'Document uploaded successfully for review!';
         statusDiv.className = 'status-message success';
+        statusDiv.style.display = 'block';
         e.target.reset();
     } catch (err) {
         statusDiv.textContent = `Upload failed: ${err.message}`;
@@ -1011,7 +1028,7 @@ async function fetchAdminSubmissions() {
     }
 }
 
-async function approveSubmission(fileId, btn) {
+async function approveSubmission(fileId, btn, forceOverwrite) {
     const input = document.getElementById(`suffix-${fileId}`);
     const status = document.getElementById(`approve-status-${fileId}`);
     const suffix = input?.value.trim();
@@ -1028,13 +1045,41 @@ async function approveSubmission(fileId, btn) {
         btn.textContent = 'Approving...';
     }
     if (status) {
-        status.textContent = '';
+        status.innerHTML = '';
         status.className = 'table-status';
     }
 
     try {
-        const res = await adminApiCall('approveSubmission', 'POST', { fileId, suffix });
+        const res = await adminApiCall('approveSubmission', 'POST', { fileId, suffix, forceOverwrite: !!forceOverwrite });
         const data = await res.json().catch(() => ({}));
+
+        if (res.status === 409 && data.conflict) {
+            // Show conflict details inline — admin must choose Keep Original or Overwrite
+            if (status) {
+                status.innerHTML = `
+                    <div style="background:rgba(234,179,8,0.15);border:1px solid #ca8a04;border-radius:6px;padding:10px;margin-top:6px;">
+                        <strong style="color:#fbbf24;">&#9888; Conflict</strong>
+                        <p style="margin:4px 0 8px;color:#fde68a;font-size:12px;">
+                            A file named <em>"${escHtml(data.existingFileName)}"</em> already exists in the Grade ${escHtml(data.grade)} folder.
+                            Choose how to proceed:
+                        </p>
+                        <div style="display:flex;gap:8px;">
+                            <button class="secondary-btn table-action-btn"
+                                style="background:rgba(239,68,68,0.2);color:#f87171;border-color:#f87171;"
+                                onclick="approveSubmission('${escHtml(fileId)}', null, true)">
+                                Overwrite existing
+                            </button>
+                            <button class="secondary-btn table-action-btn"
+                                onclick="clearApprovalConflict('${escHtml(fileId)}')">
+                                Keep original
+                            </button>
+                        </div>
+                    </div>`;
+                status.className = 'table-status';
+            }
+            return;
+        }
+
         if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
         fetchAdminSubmissions();
     } catch (err) {
@@ -1049,6 +1094,14 @@ async function approveSubmission(fileId, btn) {
             btn.disabled = false;
             btn.textContent = 'Approve PDF';
         }
+    }
+}
+
+function clearApprovalConflict(fileId) {
+    const status = document.getElementById(`approve-status-${fileId}`);
+    if (status) {
+        status.innerHTML = '';
+        status.className = 'table-status';
     }
 }
 

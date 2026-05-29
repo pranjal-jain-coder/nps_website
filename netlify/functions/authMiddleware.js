@@ -6,9 +6,11 @@ function verifyAdmin(event) {
         return false;
     }
 
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) return false;
     const token = authHeader.split(' ')[1];
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+        const decoded = jwt.verify(token, jwtSecret);
         return decoded.role === 'admin';
     } catch (error) {
         return false;
